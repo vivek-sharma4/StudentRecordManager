@@ -1,0 +1,101 @@
+﻿@model StudentRecordManager.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Admin Login";
+}
+
+<div class="container mt-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-5">
+
+            <div class="card shadow">
+
+                <div class="card-header bg-primary text-white text-center">
+                    <h3>Student Record Manager</h3>
+                    <p class="mb-0">Admin Login</p>
+                </div>
+
+                <div class="card-body">
+
+                    <form asp-controller="Account"
+                          asp-action="Login"
+                          method="post">
+
+                        <input type="hidden"
+                               name="returnUrl"
+                               value="@ViewData["ReturnUrl"]" />
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3">
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="Username"
+                                   class="form-label">
+                                Username
+                            </label>
+
+                            <input asp-for="Username"
+                                   class="form-control"
+                                   placeholder="Enter username" />
+
+                            <span asp-validation-for="Username"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="Password"
+                                   class="form-label">
+                                Password
+                            </label>
+
+                            <input asp-for="Password"
+                                   class="form-control"
+                                   placeholder="Enter password" />
+
+                            <span asp-validation-for="Password"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+                        <div class="form-check mb-3">
+
+                            <input asp-for="RememberMe"
+                                   class="form-check-input" />
+
+                            <label asp-for="RememberMe"
+                                   class="form-check-label">
+                                Remember Me
+                            </label>
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary w-100">
+                            Login
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

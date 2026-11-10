@@ -1,0 +1,36 @@
+﻿@model StudentRecordManager.Models.ErrorViewModel
+
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="container mt-5 text-center">
+
+    <div class="card shadow p-5">
+
+        <h1 class="text-danger">Oops! Something went wrong.</h1>
+
+        <p class="lead mt-3">
+            An unexpected error occurred while processing your request.
+        </p>
+
+        <p>
+            Please try again later.
+        </p>
+
+        @if (Model.ShowRequestId)
+        {
+            <p class="text-muted">
+                Request ID: @Model.RequestId
+            </p>
+        }
+
+        <a asp-controller="Student"
+           asp-action="Index"
+           class="btn btn-primary">
+            Back to Students
+        </a>
+
+    </div>
+
+</div>
