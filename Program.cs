@@ -67,20 +67,16 @@ builder.Services.AddScoped<
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
-// Create initial Admin account if it does not exist
+
 if (app.Environment.IsDevelopment())
 {
-    var adminUsername =
-        app.Configuration["AdminUser:Username"];
+    var adminEmail = app.Configuration["AdminUser:Email"];
 
-    var adminPassword =
-        app.Configuration["AdminUser:Password"];
+    var adminPassword = app.Configuration["AdminUser:Password"];
 
-    if (string.IsNullOrWhiteSpace(adminUsername) ||
-        string.IsNullOrWhiteSpace(adminPassword))
+    if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminPassword))
     {
-        throw new InvalidOperationException(
-            "Admin credentials are missing from User Secrets.");
+        throw new InvalidOperationException("Admin credentials are missing from User Secrets.");
     }
 
     await using var scope = app.Services.CreateAsyncScope();
@@ -91,19 +87,16 @@ if (app.Environment.IsDevelopment())
     var passwordHasher = scope.ServiceProvider
         .GetRequiredService<IPasswordHasher<User>>();
 
-    var existingAdmin =
-        await accountRepository.GetUserByUsernameAsync(adminUsername);
+    var existingAdmin = await accountRepository.GetUserByEmailAsync(adminEmail);
 
     if (existingAdmin == null)
     {
         var admin = new User
         {
-            Username = adminUsername
+            Email = adminEmail
         };
 
-        admin.PasswordHash = passwordHasher.HashPassword(
-            admin,
-            adminPassword);
+        admin.PasswordHash = passwordHasher.HashPassword(admin, adminPassword);
 
         await accountRepository.CreateUserAsync(admin);
     }

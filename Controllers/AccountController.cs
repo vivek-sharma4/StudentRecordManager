@@ -16,7 +16,10 @@ namespace StudentRecordManager.Controllers
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(IAccountRepository accountRepository, IPasswordHasher<User> passwordHasher, ILogger<AccountController> logger)
+        public AccountController(
+            IAccountRepository accountRepository,
+            IPasswordHasher<User> passwordHasher,
+            ILogger<AccountController> logger)
         {
             _accountRepository = accountRepository;
             _passwordHasher = passwordHasher;
@@ -27,6 +30,11 @@ namespace StudentRecordManager.Controllers
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction("Index", "Student");
+            }
+
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
@@ -46,49 +54,56 @@ namespace StudentRecordManager.Controllers
 
             try
             {
-                var user = await _accountRepository.GetUserByUsernameAsync(model.Username.Trim());
+                var trimmedEmail = model.Email.Trim().ToLowerInvariant();
+                var user = await _accountRepository.GetUserByEmailAsync(trimmedEmail);
 
                 if (user == null)
                 {
-                    _logger.LogWarning("Failed login attempt for unknown username {Username}", model.Username);
+                    _logger.LogWarning("Failed login attempt for unknown user {Email}", model.Email);
 
-                    ModelState.AddModelError(string.Empty, "Invalid username or password.");
+                    ModelState.AddModelError(string.Empty, "Invalid email address or password.");
                     return View(model);
                 }
 
                 var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
-
                 if (verificationResult == PasswordVerificationResult.Failed)
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid username or password.");
-
-                    _logger.LogWarning("Failed login attempt for username {Username}", model.Username);
-
+                    ModelState.AddModelError(string.Empty, "Invalid email address or password.");
+                    
+                    _logger.LogWarning("Failed login attempt for user {Email}", model.Email);
                     return View(model);
+                }
+
+                if (!user.IsAdmin)
+                {
+                    _logger.LogWarning("Unauthorized user {Email} blocked from login pending admin approval.", user.Email);
+                    TempData["PendingEmail"] = user.Email;
+                    return RedirectToAction(nameof(PendingApproval));
                 }
 
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
-
-                    new Claim(ClaimTypes.Name, user.Username),
-
-                    new Claim(ClaimTypes.Role, "Admin")
+                    new Claim(ClaimTypes.Name, user.Email),
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Role, user.Role),
+                    new Claim("IsAdmin", user.IsAdmin.ToString())
                 };
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
+                
                 var principal = new ClaimsPrincipal(identity);
 
                 var authProperties = new AuthenticationProperties
                 {
                     IsPersistent = model.RememberMe,
-                    AllowRefresh = true
+                    AllowRefresh = true,
+                    ExpiresUtc = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(14) : DateTimeOffset.UtcNow.AddHours(2)
                 };
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
-
-                _logger.LogInformation("User {Username} logged in successfully.", user.Username);
+               
+                _logger.LogInformation("User {Email} logged in successfully.", user.Email);
 
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
@@ -100,11 +115,155 @@ namespace StudentRecordManager.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during user login.");
-
                 ModelState.AddModelError(string.Empty, "Unable to process login. Please try again.");
-
                 return View(model);
             }
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult Register(string? returnUrl = null)
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction("Index", "Student");
+            }
+
+            ViewData["ReturnUrl"] = returnUrl;
+            return View();
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(
+            RegisterViewModel model,
+            string? returnUrl = null)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewData["ReturnUrl"] = returnUrl;
+                return View(model);
+            }
+
+            try
+            {
+                var trimmedEmail = model.Email.Trim().ToLowerInvariant();
+
+                var existingUser = await _accountRepository.GetUserByEmailAsync(trimmedEmail);
+                if (existingUser != null)
+                {
+                    _logger.LogWarning("Registration failed: Email {Email} already exists.", trimmedEmail);
+                    ModelState.AddModelError("Email", "An account with this email address already exists.");
+                    return View(model);
+                }
+
+                var newUser = new User
+                {
+                    Email = trimmedEmail,
+                    IsAdmin = false,
+                    Role = "User",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                newUser.PasswordHash = _passwordHasher.HashPassword(newUser, model.Password);
+
+                var newUserId = await _accountRepository.CreateUserAsync(newUser);
+                newUser.UserID = newUserId;
+
+                _logger.LogInformation("New user registered with UserID {UserID} and Email {Email}. Awaiting Admin approval.", newUserId, trimmedEmail);
+
+                TempData["PendingEmail"] = trimmedEmail;
+                return RedirectToAction(nameof(PendingApproval));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during user registration for {Email}", model.Email);
+                ModelState.AddModelError(string.Empty, "Unable to complete registration. Please try again.");
+                return View(model);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult PendingApproval()
+        {
+            ViewBag.PendingEmail = TempData["PendingEmail"] as string;
+            return View();
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> UserApprovals()
+        {
+            try
+            {
+                var pendingUsers = await _accountRepository.GetPendingUsersAsync();
+                var allUsers = await _accountRepository.GetAllUsersAsync();
+
+                ViewBag.AllUsers = allUsers;
+                return View(pendingUsers);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving pending registration requests.");
+                TempData["ErrorMessage"] = "Unable to retrieve registration requests.";
+                return View(new List<User>());
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveUser(int userId)
+        {
+            try
+            {
+                var success = await _accountRepository.UpdateUserAuthorizationAsync(userId, true);
+                if (success)
+                {
+                    _logger.LogInformation("Admin {Admin} approved registration for UserID {UserID}.", User.Identity?.Name, userId);
+                    TempData["SuccessMessage"] = "User registration has been approved. The user may now access the portal.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "User not found or authorization failed.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error approving UserID {UserID}.", userId);
+                TempData["ErrorMessage"] = "An error occurred while approving the user.";
+            }
+
+            return RedirectToAction(nameof(UserApprovals));
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectUser(int userId)
+        {
+            try
+            {
+                var success = await _accountRepository.DeleteUserAsync(userId);
+                if (success)
+                {
+                    _logger.LogInformation("Admin {Admin} rejected and deleted registration for UserID {UserID}.", User.Identity?.Name, userId);
+                    TempData["SuccessMessage"] = "User registration was rejected and removed.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "User not found or deletion failed.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting UserID {UserID}.", userId);
+                TempData["ErrorMessage"] = "An error occurred while rejecting the user.";
+            }
+
+            return RedirectToAction(nameof(UserApprovals));
         }
 
         [Authorize]
@@ -115,7 +274,6 @@ namespace StudentRecordManager.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             _logger.LogInformation("User {Username} logged out.", User.Identity?.Name);
-
             return RedirectToAction(nameof(Login));
         }
 

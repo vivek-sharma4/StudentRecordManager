@@ -1,0 +1,148 @@
+﻿@model IEnumerable<StudentRecordManager.Models.User>
+@{
+    ViewData["Title"] = "User Approvals - Admin Dashboard";
+    var allUsers = ViewBag.AllUsers as IEnumerable<StudentRecordManager.Models.User> ?? Enumerable.Empty<StudentRecordManager.Models.User>();
+}
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-1">User Registration Approvals</h2>
+            <p class="text-muted small mb-0">Authorize faculty, staff, and student accounts to grant portal access</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill font-mono">
+                Pending: @Model.Count()
+            </span>
+            <span class="badge bg-success px-3 py-2 rounded-pill font-mono">
+                Approved: @allUsers.Count(u => u.IsAdmin)
+            </span>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+            <div>@TempData["SuccessMessage"]</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+            <div>@TempData["ErrorMessage"]</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark">
+                Pending Requests Awaiting Review
+            </h5>
+            <span class="badge bg-light text-dark border">@Model.Count() awaiting approval</span>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="card-body text-center py-5">
+                <h6 class="fw-bold text-dark">No Pending Requests</h6>
+                <p class="text-muted small mb-0">All registered users have been reviewed and authorized.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th class="ps-4">Email Address</th>
+                            <th>Username</th>
+                            <th>Registered On</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Admin Decision</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-semibold text-dark">@user.Email</td>
+                                <td><span class="badge bg-light text-dark border">@user.Email</span></td>
+                                <td class="text-muted small">@user.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td>
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1">
+                                        Pending Review
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="d-inline-flex gap-2">
+                                        <form asp-controller="Account" asp-action="ApproveUser" method="post" class="d-inline">
+                                            <input type="hidden" name="userId" value="@user.UserID" />
+                                            <button type="submit" class="btn btn-success btn-sm px-3 fw-semibold shadow-xs">
+                                                Approve
+                                            </button>
+                                        </form>
+                                        <form asp-controller="Account" asp-action="RejectUser" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to reject this registration request?');">
+                                            <input type="hidden" name="userId" value="@user.UserID" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm px-2">
+                                                Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="fw-bold mb-0 text-dark">All Users Directory</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-secondary small text-uppercase">
+                    <tr>
+                        <th class="ps-4">Email Address</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Registered Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in allUsers)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-medium">@user.Email</td>
+                            <td>
+                                <span class="badge @(user.Role == "Admin" ? "bg-primary" : "bg-secondary")">
+                                    @user.Role
+                                </span>
+                            </td>
+                            <td>
+                                @if (user.IsAdmin)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                        Authorized
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                                        Pending Approval
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-muted small">@user.CreatedAt.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
