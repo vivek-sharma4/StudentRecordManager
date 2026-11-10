@@ -50,13 +50,13 @@ namespace StudentRecordManager.Services
             {
                 int studentId = await _studentRepository.CreateStudentAsync(student);
 
-                _logger.LogInformation("Student created successfully. StudentID: {StudentID}", studentId);
+                _logger.LogInformation("Student created successfully. StudentID: {StudentID}, RollNo: {RollNo}, Department: {Department}, Marks: {Marks}",studentId, student.RollNo, student.Department, student.Marks);
 
                 return studentId;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating student with RollNo: {RollNo}", student.RollNo);
+                _logger.LogError(ex, "Error creating student. RollNo: {RollNo}, Department: {Department}", student.RollNo, student.Department);
 
                 throw;
             }
@@ -91,14 +91,14 @@ namespace StudentRecordManager.Services
 
                 if (updated)
                 {
-                    _logger.LogInformation("Student updated successfully. StudentID: {StudentID}", student.StudentID);
+                    _logger.LogInformation("Student updated successfully. StudentID: {StudentID}, RollNo: {RollNo}, Department: {Department}, Marks: {Marks}", student.StudentID, student.RollNo, student.Department, student.Marks);
                 }
 
                 return updated;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating student. StudentID: {StudentID}", student.StudentID);
+                _logger.LogError(ex, "Error updating student. StudentID: {StudentID}, RollNo: {RollNo}", student.StudentID, student.RollNo);
 
                 throw;
             }
@@ -130,13 +130,19 @@ namespace StudentRecordManager.Services
         }
 
         // Search students by department
+
         public async Task<IEnumerable<Student>> SearchByDepartmentAsync(
             string department)
         {
             if (string.IsNullOrWhiteSpace(department))
                 throw new ArgumentException("Department is required.");
 
-            return await _studentRepository.SearchByDepartmentAsync(department.Trim());
+            department = department.Trim();
+
+            if (department.Length < 3)
+                throw new ArgumentException("Please enter at least 3 characters to search.");
+
+            return await _studentRepository.SearchByDepartmentAsync(department);
         }
 
         // Validate student details

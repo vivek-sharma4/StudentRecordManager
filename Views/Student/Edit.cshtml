@@ -34,14 +34,24 @@
                   class="text-danger"></span>
         </div>
 
+        
         <div class="mb-3">
-            <label asp-for="Department" class="form-label"></label>
+            <label asp-for="Department" class="form-label">
+                Department
+            </label>
 
-            <input asp-for="Department" class="form-control" />
+            <select asp-for="Department"
+                    asp-items="ViewBag.Departments"
+                    class="form-select">
+
+                <option value="">-- Select Department --</option>
+
+            </select>
 
             <span asp-validation-for="Department"
                   class="text-danger"></span>
         </div>
+
 
         <div class="mb-3">
             <label asp-for="Marks" class="form-label"></label>

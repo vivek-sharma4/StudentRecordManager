@@ -51,7 +51,14 @@ builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 // Student service
 builder.Services.AddScoped<IStudentService, StudentService>();
+
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+
+// Department repository
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+
+// Department service
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 
 builder.Services.AddScoped<
     Microsoft.AspNetCore.Identity.IPasswordHasher<User>,

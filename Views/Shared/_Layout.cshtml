@@ -52,6 +52,16 @@
                                 Students
                             </a>
                         </li>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="Department"
+                                   asp-action="Index">
+                                    Departments
+                                </a>
+                            </li>
+                        }
 
                     </ul>
 

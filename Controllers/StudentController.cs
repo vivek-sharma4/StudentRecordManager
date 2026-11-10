@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using StudentRecordManager.Models;
 using StudentRecordManager.Services.Interfaces;
 
@@ -9,15 +10,18 @@ namespace StudentRecordManager.Controllers
     public class StudentController : Controller
     {
         private readonly IStudentService _studentService;
+        private readonly IDepartmentService _departmentService;
         private readonly ILogger<StudentController> _logger;
 
-        public StudentController(IStudentService studentService, ILogger<StudentController> logger)
+        public StudentController(IStudentService studentService, IDepartmentService departmentService, ILogger<StudentController> logger)
         {
             _studentService = studentService;
+            _departmentService = departmentService;
             _logger = logger;
         }
 
         // Display all students and search by department
+
         public async Task<IActionResult> Index(string? department)
         {
             try
@@ -26,7 +30,21 @@ namespace StudentRecordManager.Controllers
 
                 if (!string.IsNullOrWhiteSpace(department))
                 {
+                    department = department.Trim();
+
+                    if (department.Length < 3)
+                    {
+                        ModelState.AddModelError("Department", "Please enter at least 3 characters to search.");
+
+                        ViewBag.Department = department;
+
+                        students = await _studentService.GetAllStudentsAsync();
+
+                        return View(students);
+                    }
+
                     students = await _studentService.SearchByDepartmentAsync(department);
+
                     ViewBag.Department = department;
                 }
                 else
@@ -38,7 +56,10 @@ namespace StudentRecordManager.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving student records.");
+                _logger.LogError(
+                    ex,
+                    "Error retrieving student records. Department: {Department}",
+                    department);
 
                 TempData["Error"] = "Unable to retrieve student records.";
 
@@ -46,10 +67,12 @@ namespace StudentRecordManager.Controllers
             }
         }
 
-        // Display create form
+
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            await LoadDepartmentsAsync();
+
             return View();
         }
 
@@ -59,7 +82,10 @@ namespace StudentRecordManager.Controllers
         public async Task<IActionResult> Create(Student student)
         {
             if (!ModelState.IsValid)
+            {
+                await LoadDepartmentsAsync(student.Department);
                 return View(student);
+            }
 
             try
             {
@@ -100,6 +126,8 @@ namespace StudentRecordManager.Controllers
                 if (student == null)
                     return NotFound();
 
+                await LoadDepartmentsAsync(student.Department);
+
                 return View(student);
             }
             catch (Exception ex)
@@ -121,7 +149,10 @@ namespace StudentRecordManager.Controllers
                 return BadRequest();
 
             if (!ModelState.IsValid)
+            {
+                await LoadDepartmentsAsync(student.Department);
                 return View(student);
+            }
 
             try
             {
@@ -201,6 +232,17 @@ namespace StudentRecordManager.Controllers
 
                 return RedirectToAction(nameof(Index));
             }
+        }
+        private async Task LoadDepartmentsAsync(string? selectedDepartment = null)
+        {
+            var departments = await _departmentService
+                .GetAllActiveDepartmentsAsync();
+
+            ViewBag.Departments = new SelectList(
+                departments,
+                "DepartmentName",
+                "DepartmentName",
+                selectedDepartment);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Dapper;
+﻿
+using System.Data;
+using Dapper;
 using StudentRecordManager.Data;
 using StudentRecordManager.Models;
 using StudentRecordManager.Repositories.Interfaces;
@@ -17,62 +19,44 @@ namespace StudentRecordManager.Repositories
         // Get all students
         public async Task<IEnumerable<Student>> GetAllStudentsAsync()
         {
-            const string query = @"
-                SELECT StudentID, Name, RollNo, Department, Marks
-                FROM Students
-                ORDER BY StudentID DESC";
+            await using var connection =
+                _connectionFactory.CreateConnection();
 
-            await using var connection = _connectionFactory.CreateConnection();
-
-            var students = await connection.QueryAsync<Student>(query);
-
-            return students;
+            return await connection.QueryAsync<Student>("dbo.usp_Student_GetAll",
+                commandType: CommandType.StoredProcedure);
         }
 
         // Get student by ID
         public async Task<Student?> GetStudentByIdAsync(int studentId)
         {
-            const string query = @"
-                SELECT StudentID, Name, RollNo, Department, Marks
-                FROM Students
-                WHERE StudentID = @StudentID";
+            await using var connection =
+                _connectionFactory.CreateConnection();
 
-            await using var connection = _connectionFactory.CreateConnection();
-
-            return await connection.QuerySingleOrDefaultAsync<Student>(query, new { StudentID = studentId });
+            return await connection.QuerySingleOrDefaultAsync<Student>("dbo.usp_Student_GetById",
+                new { StudentID = studentId },
+                commandType: CommandType.StoredProcedure);
         }
 
         // Create student
         public async Task<int> CreateStudentAsync(Student student)
         {
-            const string query = @"
-                INSERT INTO Students
-                (Name, RollNo, Department, Marks)
-                VALUES
-                (@Name, @RollNo, @Department, @Marks);
+            await using var connection =
+                _connectionFactory.CreateConnection();
 
-                SELECT CAST(SCOPE_IDENTITY() AS INT);";
-
-            await using var connection = _connectionFactory.CreateConnection();
-
-            return await connection.QuerySingleAsync<int>(query, student);
+            return await connection.QuerySingleAsync<int>("dbo.usp_Student_Insert",
+                student,
+                commandType: CommandType.StoredProcedure);
         }
 
         // Update student
         public async Task<bool> UpdateStudentAsync(Student student)
         {
-            const string query = @"
-                UPDATE Students
-                SET
-                    Name = @Name,
-                    RollNo = @RollNo,
-                    Department = @Department,
-                    Marks = @Marks
-                WHERE StudentID = @StudentID";
+            await using var connection =
+                _connectionFactory.CreateConnection();
 
-            await using var connection = _connectionFactory.CreateConnection();
-
-            var rowsAffected = await connection.ExecuteAsync(query, student);
+            var rowsAffected = await connection.QuerySingleAsync<int>("dbo.usp_Student_Update",
+                student,
+                commandType: CommandType.StoredProcedure);
 
             return rowsAffected > 0;
         }
@@ -80,41 +64,44 @@ namespace StudentRecordManager.Repositories
         // Delete student
         public async Task<bool> DeleteStudentAsync(int studentId)
         {
-            const string query = @"
-                DELETE FROM Students
-                WHERE StudentID = @StudentID";
+            await using var connection =
+                _connectionFactory.CreateConnection();
 
-            await using var connection = _connectionFactory.CreateConnection();
-
-            var rowsAffected = await connection.ExecuteAsync(query, new { StudentID = studentId });
+            var rowsAffected = await connection.QuerySingleAsync<int>("dbo.usp_Student_Delete",
+                new { StudentID = studentId },
+                commandType: CommandType.StoredProcedure);
 
             return rowsAffected > 0;
         }
 
         // Search students by department
-        public async Task<IEnumerable<Student>> SearchByDepartmentAsync(string department)
+        public async Task<IEnumerable<Student>> SearchByDepartmentAsync(
+            string department)
         {
-            const string query = @"
-                SELECT StudentID, Name, RollNo, Department, Marks
-                FROM Students
-                WHERE Department = @Department
-                ORDER BY Name";
+            await using var connection =
+                _connectionFactory.CreateConnection();
 
-            await using var connection = _connectionFactory.CreateConnection();
-
-            return await connection.QueryAsync<Student>(query, new { Department = department });
+            return await connection.QueryAsync<Student>("dbo.usp_Student_SearchByDepartment",
+                new { Department = department },
+                commandType: CommandType.StoredProcedure);
         }
-        public async Task<bool> RollNoExistsAsync(string rollNo, int? excludeStudentId = null)
+
+        // Check whether RollNo already exists
+        public async Task<bool> RollNoExistsAsync(
+            string rollNo,
+            int? excludeStudentId = null)
         {
-            const string query = @"
-                SELECT COUNT(1)
-                FROM Students
-                WHERE RollNo = @RollNo
-                AND (@StudentID IS NULL OR StudentID <> @StudentID)";
+            await using var connection =
+                _connectionFactory.CreateConnection();
 
-            await using var connection = _connectionFactory.CreateConnection();
+            var count = await connection.QuerySingleAsync<int>("dbo.usp_Student_RollNoExists",
+                new
+                {
+                    RollNo = rollNo,
+                    StudentID = excludeStudentId
+                },
+                commandType: CommandType.StoredProcedure);
 
-            var count = await connection.ExecuteScalarAsync<int>(query,new{RollNo = rollNo, StudentID = excludeStudentId});
             return count > 0;
         }
     }
