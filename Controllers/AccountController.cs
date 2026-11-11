@@ -74,7 +74,7 @@ namespace StudentRecordManager.Controllers
                     return View(model);
                 }
 
-                if (!user.IsAdmin)
+                if (!user.IsAuthorised)
                 {
                     _logger.LogWarning("Unauthorized user {Email} blocked from login pending admin approval.", user.Email);
                     TempData["PendingEmail"] = user.Email;
@@ -87,7 +87,7 @@ namespace StudentRecordManager.Controllers
                     new Claim(ClaimTypes.Name, user.Email),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.Role, user.Role),
-                    new Claim("IsAdmin", user.IsAdmin.ToString())
+                    new Claim("IsAuthorised", user.IsAuthorised.ToString())
                 };
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -161,7 +161,7 @@ namespace StudentRecordManager.Controllers
                 var newUser = new User
                 {
                     Email = trimmedEmail,
-                    IsAdmin = false,
+                    IsAuthorised = false,
                     Role = "User",
                     CreatedAt = DateTime.UtcNow
                 };

@@ -15,7 +15,7 @@
                 Pending: @Model.Count()
             </span>
             <span class="badge bg-success px-3 py-2 rounded-pill font-mono">
-                Approved: @allUsers.Count(u => u.IsAdmin)
+                Approved: @allUsers.Count(u => u.IsAuthorised)
             </span>
         </div>
     </div>
@@ -125,7 +125,7 @@
                                 </span>
                             </td>
                             <td>
-                                @if (user.IsAdmin)
+                                @if (user.IsAuthorised)
                                 {
                                     <span class="badge bg-success-subtle text-success border border-success-subtle">
                                         Authorized

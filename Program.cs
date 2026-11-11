@@ -94,7 +94,9 @@ if (app.Environment.IsDevelopment())
         var admin = new User
         {
             Email = adminEmail,
-            IsAdmin = true
+            IsAuthorised = true,
+            Department = "Admin",
+            Role = "Admin"
         };
 
         admin.PasswordHash = passwordHasher.HashPassword(admin, adminPassword);
