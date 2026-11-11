@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -9,69 +10,111 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/StudentRecordManager.styles.css" asp-append-version="true" />
 </head>
-<body class="bg-light d-flex flex-column min-vh-100">
+
+<body class="d-flex flex-column min-vh-100">
+
     <header class="sticky-top">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm py-2.5">
+        <nav class="navbar navbar-expand-lg navbar-dark app-navbar">
             <div class="container-fluid px-4">
-                <a class="navbar-brand fw-bold" asp-controller="Student" asp-action="Index">
+
+                <a class="navbar-brand"
+                   asp-controller="Student"
+                   asp-action="Index">
                     Student Record Manager
                 </a>
 
-                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                <button class="navbar-toggler border-0"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="mainNavbar">
-                    <ul class="navbar-nav me-auto">
+
+                    <ul class="navbar-nav me-auto ms-lg-3">
+
                         <li class="nav-item">
-                            <a class="nav-link text-white-50 active fw-medium" asp-controller="Student" asp-action="Index">
+                            <a class="nav-link"
+                               asp-controller="Student"
+                               asp-action="Index">
                                 Student Portal
                             </a>
                         </li>
+
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-warning fw-semibold" asp-controller="Account" asp-action="UserApprovals">
+                                <a class="nav-link"
+                                   asp-controller="Account"
+                                   asp-action="UserApprovals">
                                     User Approvals
-                                    <span class="badge bg-warning text-dark rounded-pill ms-1">Admin</span>
+                                    <span class="badge bg-warning text-dark ms-1">
+                                        Admin
+                                    </span>
                                 </a>
-                                <a class="nav-link text-warning fw-semibold" asp-controller="Department" asp-action="Index">
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link"
+                                   asp-controller="Department"
+                                   asp-action="Index">
                                     Departments
                                 </a>
                             </li>
                         }
+
                     </ul>
 
                     <ul class="navbar-nav align-items-lg-center gap-2">
+
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <span class="nav-link text-white small">
-                                    Welcome <strong class="text-white">@User.Identity.Name</strong>
+                                <span class="nav-link text-white">
+                                    Welcome
+                                    <strong>@User.Identity.Name</strong>
                                 </span>
                             </li>
+
                             <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-outline-light btn-sm px-3 rounded-pill">
+                                <form asp-controller="Account"
+                                      asp-action="Logout"
+                                      method="post"
+                                      class="d-inline">
+
+                                    <button type="submit"
+                                            class="btn btn-outline-light btn-sm px-3">
                                         Sign Out
                                     </button>
+
                                 </form>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-white fw-medium" asp-controller="Account" asp-action="Login">
+                                <a class="nav-link"
+                                   asp-controller="Account"
+                                   asp-action="Login">
                                     Sign In
                                 </a>
                             </li>
+
                             <li class="nav-item">
-                                <a class="btn btn-light text-primary fw-semibold btn-sm px-3 rounded-pill ms-lg-2" asp-controller="Account" asp-action="Register">
+                                <a class="btn btn-light text-dark fw-semibold btn-sm px-3 rounded-pill"
+                                   asp-controller="Account"
+                                   asp-action="Register">
                                     Request Access
                                 </a>
                             </li>
                         }
+
                     </ul>
+
                 </div>
             </div>
         </nav>
@@ -81,15 +124,19 @@
         @RenderBody()
     </main>
 
-    <footer class="bg-white border-top py-3 text-muted mt-auto">
-        <div class="container text-center text-xs">
-            &copy; 2026 - Student Record Manager &bull; Academic Portal
+    <footer class="app-footer mt-auto">
+        <div class="container text-center">
+            &copy; 2026 - Student Record Manager
+            <span class="mx-1">&bull;</span>
+            Academic Portal
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

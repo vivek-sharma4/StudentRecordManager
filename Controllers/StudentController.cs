@@ -197,6 +197,13 @@ namespace StudentRecordManager.Controllers
         {
             var departments = await _departmentService.GetAllActiveDepartmentsAsync();
 
+            if (!User.IsInRole("Admin"))
+            {
+                var userDepartment = User.FindFirst("Department")?.Value;
+
+                departments = departments.Where(d => d.DepartmentName.Equals(userDepartment, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
             ViewBag.Departments = departments;
             ViewBag.SelectedDepartment = selectedDepartment;
         }

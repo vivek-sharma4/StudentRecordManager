@@ -2,27 +2,18 @@
 
 @{
     ViewData["Title"] = "Student Records";
-
-    var departments =
-        ViewBag.Departments as IEnumerable<StudentRecordManager.Models.Department>
+    var departments = ViewBag.Departments as IEnumerable<StudentRecordManager.Models.Department>
         ?? Enumerable.Empty<StudentRecordManager.Models.Department>();
-
     var openCreateModal = ViewBag.OpenCreateModal as bool? ?? false;
-
     var editStudentId = ViewBag.EditStudentId as int?;
-
     var students = Model ?? Enumerable.Empty<Student>();
 }
 
 <div class="container mt-4">
-
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Student Records</h2>
-
-        <button type="button"
-                class="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#createStudentModal">
+        <button type="button" class="btn btn-primary"
+                data-bs-toggle="modal" data-bs-target="#createStudentModal">
             Add Student
         </button>
     </div>
@@ -30,67 +21,41 @@
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-
             @TempData["Success"]
-
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert">
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-
             @TempData["Error"]
-
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert">
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-
-    <form asp-controller="Student"
-          asp-action="Index"
-          method="get"
-          class="mb-4">
-        <div class="row align-items-start">
-            <div class="col-md-4">
-                <input type="text"
-                       name="department"
-                       value="@ViewBag.Department"
-                       class="form-control"
-                       placeholder="Search by department"
-                       minlength="3" />
-
-                @if (ViewBag.SearchError != null)
-                {
-                    <span class="text-danger">
-                    @ViewBag.SearchError
-                    </span>
-                }
+    @if (User.IsInRole("Admin"))
+    {
+        <form asp-controller="Student" asp-action="Index" method="get" class="mb-4">
+            <div class="row align-items-start">
+                <div class="col-md-4">
+                    <input type="text" name="department" value="@ViewBag.Department"
+                           class="form-control" placeholder="Search by department" minlength="3" />
+                    @if (ViewData.ModelState.TryGetValue("Department", out var departmentState)
+                        && departmentState.Errors.Count > 0)
+                    {
+                        <span class="text-danger">
+                            @departmentState.Errors[0].ErrorMessage
+                        </span>
+                    }
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a asp-controller="Student" asp-action="Index" class="btn btn-secondary">Clear</a>
+                </div>
             </div>
-
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">
-                    Search
-                </button>
-
-                <a asp-controller="Student"
-                   asp-action="Index"
-                   class="btn btn-secondary">
-                    Clear
-                </a>
-            </div>
-
-        </div>
-
-    </form>
-
+        </form>
+    }
 
     <div class="table-responsive">
         <table class="table table-bordered table-striped align-middle">
@@ -102,248 +67,34 @@
                     <th>Department</th>
                     <th>Marks</th>
                     <th>Actions</th>
-                </tr
+                </tr>
             </thead>
-
             <tbody>
                 @if (students.Any())
                 {
                     foreach (var student in students)
                     {
                         <tr>
-                            <td> @student.StudentID </td>
-
-                            <td> @student.Name </td>
-                            <td> @student.RollNo </td>
-                            <td> @student.Department </td>
-                            <td> @student.Marks </td>
-
+                            <td>@student.StudentID</td>
+                            <td>@student.Name</td>
+                            <td>@student.RollNo</td>
+                            <td>@student.Department</td>
+                            <td>@student.Marks</td>
                             <td>
-                                <button type="button"
-                                        class="btn btn-warning btn-sm"
+                                <button type="button" class="btn btn-warning btn-sm"
                                         data-bs-toggle="modal"
-                                        data-bs-target="#editStudentModal-@student.StudentID">
-                                    Edit
-                                </button>
-
-                                <button type="button"
-                                        class="btn btn-danger btn-sm"
+                                        data-bs-target="#editStudentModal-@student.StudentID">Edit</button>
+                                <button type="button" class="btn btn-danger btn-sm"
                                         data-bs-toggle="modal"
-                                        data-bs-target="#deleteStudentModal-@student.StudentID">
-                                    Delete
-                                </button>
+                                        data-bs-target="#deleteStudentModal-@student.StudentID">Delete</button>
                             </td>
                         </tr>
-
-                        <div class="modal fade"
-                             id="editStudentModal-@student.StudentID"
-                             tabindex="-1"
-                             aria-labelledby="editStudentModalLabel-@student.StudentID"
-                             aria-hidden="true">
-
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title"
-                                            id="editStudentModalLabel-@student.StudentID">
-                                            Edit Student
-                                        </h5>
-
-                                        <button type="button"
-                                                class="btn-close"
-                                                data-bs-dismiss="modal"
-                                                aria-label="Close">
-                                        </button>
-                                    </div>
-
-                                    <form asp-controller="Student"
-                                          asp-action="Edit"
-                                          method="post">
-
-                                        @Html.AntiForgeryToken()
-
-                                        <div class="modal-body">
-                                            <div asp-validation-summary="ModelOnly"
-                                                 class="text-danger mb-3">
-                                            </div>
-                                            <div class="mb-3">
-
-                                                <label class="form-label">
-                                                    Student ID
-                                                </label>
-
-                                                <input type="text"
-                                                       class="form-control"
-                                                       value="@student.StudentID"
-                                                       readonly />
-
-                                                <input type="hidden"
-                                                       name="id"
-                                                       value="@student.StudentID" />
-
-                                                <input type="hidden"
-                                                       name="StudentID"
-                                                       value="@student.StudentID" />
-                                                <input type="hidden"
-                                                       name="Department"
-                                                       value="@student.Department" />
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">
-                                                    Name
-                                                </label>
-                                                <input type="text"
-                                                       name="Name"
-                                                       value="@student.Name"
-                                                       class="form-control"
-                                                       maxlength="100"
-                                                       required />
-
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">
-                                                    Roll No
-                                                </label>
-
-                                                <input type="text"
-                                                       name="RollNo"
-                                                       value="@student.RollNo"
-                                                       class="form-control"
-                                                       maxlength="50"
-                                                       required />
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">
-                                                    Department
-                                                </label>
-
-                                                <input type="text"
-                                                       class="form-control"
-                                                       value="@student.Department"
-                                                       readonly />
-                                            </div>
-
-
-                                            <div class="mb-3">
-                                                <label class="form-label">
-                                                    Marks
-                                                </label>
-
-                                                <input type="number"
-                                                       name="Marks"
-                                                       value="@student.Marks"
-                                                       min="0"
-                                                       max="100"
-                                                       step="0.01"
-                                                       class="form-control"
-                                                       required />
-                                            </div>
-                                        </div>
-
-                                        <div class="modal-footer">
-                                            <button type="button"
-                                                    class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">
-                                                Cancel
-                                            </button>
-
-                                            <button type="submit"
-                                                    class="btn btn-success">
-                                                Save Changes
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="modal fade"
-                             id="deleteStudentModal-@student.StudentID"
-                             tabindex="-1"
-                             aria-labelledby="deleteStudentModalLabel-@student.StudentID"
-                             aria-hidden="true">
-
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-
-                                        <h5 class="modal-title"
-                                            id="deleteStudentModalLabel-@student.StudentID">
-                                            Delete Student
-                                        </h5>
-
-                                        <button type="button"
-                                                class="btn-close"
-                                                data-bs-dismiss="modal"
-                                                aria-label="Close">
-                                        </button>
-                                    </div>
-
-
-                                    <div class="modal-body">
-                                        <p class="mb-2">
-                                            Are you sure you want to delete this student?
-                                        </p>
-
-                                        <div class="bg-light rounded p-3">
-                                            <div>
-                                                <strong>Name:</strong>
-                                                @student.Name
-                                            </div>
-                                            <div>
-                                                <strong>Roll No:</strong>
-                                                @student.RollNo
-                                            </div>
-                                            <div>
-                                                <strong>Department:</strong>
-                                                @student.Department
-                                            </div>
-                                        </div>
-
-                                        <div class="alert alert-warning mt-3 mb-0">
-                                            This action cannot be undone.
-                                        </div>
-                                    </div>
-
-
-                                    <div class="modal-footer">
-                                        <button type="button"
-                                                class="btn btn-secondary"
-                                                data-bs-dismiss="modal">
-                                            Cancel
-                                        </button>
-
-                                        <form asp-controller="Student"
-                                              asp-action="Delete"
-                                              method="post"
-                                              class="d-inline">
-
-                                            @Html.AntiForgeryToken()
-
-                                            <input type="hidden"
-                                                   name="id"
-                                                   value="@student.StudentID" />
-
-                                            <button type="submit"
-                                                    class="btn btn-danger">
-                                                Yes, Delete
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     }
                 }
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center">
-                            No student records found.
-                        </td>
+                        <td colspan="6" class="text-center">No student records found.</td>
                     </tr>
                 }
             </tbody>
@@ -351,97 +102,117 @@
     </div>
 </div>
 
-<div class="modal fade"
-     id="createStudentModal"
-     tabindex="-1"
-     aria-labelledby="createStudentModalLabel"
-     aria-hidden="true">
-
-    <div class="modal-dialog">
-
-        <div class="modal-content">
-
-            <div class="modal-header">
-
-                <h5 class="modal-title"
-                    id="createStudentModalLabel">
-                    Add New Student
-                </h5>
-
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Close">
-                </button>
-
+<!-- Edit and Delete modals are outside the table. -->
+@foreach (var student in students)
+{
+    <div class="modal fade" id="editStudentModal-@student.StudentID" tabindex="-1"
+         aria-labelledby="editStudentModalLabel-@student.StudentID" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editStudentModalLabel-@student.StudentID">Edit Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-controller="Student" asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <div class="mb-3">
+                            <label class="form-label">Student ID</label>
+                            <input type="text" class="form-control" value="@student.StudentID" readonly />
+                            <input type="hidden" name="id" value="@student.StudentID" />
+                            <input type="hidden" name="StudentID" value="@student.StudentID" />
+                            <input type="hidden" name="Department" value="@student.Department" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="Name" value="@student.Name"
+                                   class="form-control" maxlength="100" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Roll No</label>
+                            <input type="text" name="RollNo" value="@student.RollNo"
+                                   class="form-control" maxlength="50" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control" value="@student.Department" readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Marks</label>
+                            <input type="number" name="Marks" value="@student.Marks"
+                                   min="0" max="100" step="0.01" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Save Changes</button>
+                    </div>
+                </form>
             </div>
+        </div>
+    </div>
 
-
-            <form asp-controller="Student"
-                  asp-action="Create"
-                  method="post">
-
-                @Html.AntiForgeryToken()
-
+    <div class="modal fade" id="deleteStudentModal-@student.StudentID" tabindex="-1"
+         aria-labelledby="deleteStudentModalLabel-@student.StudentID" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteStudentModalLabel-@student.StudentID">Delete Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
                 <div class="modal-body">
-
-                    <div asp-validation-summary="ModelOnly"
-                         class="text-danger mb-3">
+                    <p class="mb-2">Are you sure you want to delete this student?</p>
+                    <div class="bg-light rounded p-3">
+                        <div><strong>Name:</strong> @student.Name</div>
+                        <div><strong>Roll No:</strong> @student.RollNo</div>
+                        <div><strong>Department:</strong> @student.Department</div>
                     </div>
+                    <div class="alert alert-warning mt-3 mb-0">This action cannot be undone.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form asp-controller="Student" asp-action="Delete" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@student.StudentID" />
+                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
-
-                    <!-- Name -->
+<!-- Create Student Modal -->
+<div class="modal fade" id="createStudentModal" tabindex="-1"
+     aria-labelledby="createStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createStudentModalLabel">Add New Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Student" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <div class="mb-3">
-
-                        <label class="form-label">
-                            Name
-                        </label>
-
-                        <input type="text"
-                               name="Name"
-                               class="form-control"
-                               maxlength="100"
-                               required />
-
+                        <label class="form-label">Name</label>
+                        <input type="text" name="Name" class="form-control" maxlength="100" required />
                     </div>
-
                     <div class="mb-3">
-
-                        <label class="form-label">
-                            Roll No
-                        </label>
-
-                        <input type="text"
-                               name="RollNo"
-                               class="form-control"
-                               maxlength="50"
-                               required />
-
-                        @if (ViewData.ModelState["RollNo"]?.Errors.Count > 0)
+                        <label class="form-label">Roll No</label>
+                        <input type="text" name="RollNo" class="form-control" maxlength="50" required />
+                        @if (ViewData.ModelState.TryGetValue("RollNo", out var rollNoState)
+                            && rollNoState.Errors.Count > 0)
                         {
-                            <span class="text-danger">
-                                @ViewData.ModelState["RollNo"]
-                                ?.Errors[0]
-                                .ErrorMessage
-                            </span>
+                            <span class="text-danger">@rollNoState.Errors[0].ErrorMessage</span>
                         }
-
                     </div>
-
                     <div class="mb-3">
-
-                        <label class="form-label">
-                            Department
-                        </label>
-
-                        <select name="Department"
-                                class="form-select"
-                                required>
-
-                            <option value="">
-                                -- Select Department --
-                            </option>
-
+                        <label class="form-label">Department</label>
+                        <select name="Department" class="form-select" required>
+                            <option value="">-- Select Department --</option>
                             @foreach (var department in departments)
                             {
                                 <option value="@department.DepartmentName"
@@ -449,66 +220,30 @@
                                     @department.DepartmentName
                                 </option>
                             }
-
                         </select>
-
-                        @if (ViewBag.SearchError != null)
-                        {
-                            <span class="text-danger">
-                            @ViewBag.SearchError
-                            </span>
-                        }
-
                     </div>
-
-
                     <div class="mb-3">
-
-                        <label class="form-label">
-                            Marks
-                        </label>
-
-                        <input type="number"
-                               name="Marks"
-                               class="form-control"
-                               min="0"
-                               max="100"
-                               step="0.01"
-                               required />
-
+                        <label class="form-label">Marks</label>
+                        <input type="number" name="Marks" class="form-control"
+                               min="0" max="100" step="0.01" required />
                     </div>
-
                 </div>
-
-
                 <div class="modal-footer">
-
-                    <button type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal">
-                        Cancel
-                    </button>
-
-                    <button type="submit"
-                            class="btn btn-primary">
-                        Save Student
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Student</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-
 @if (openCreateModal)
 {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             var modalElement = document.getElementById("createStudentModal");
-
             if (modalElement) {
                 var modal = new bootstrap.Modal(modalElement);
-
                 modal.show();
             }
         });
@@ -519,10 +254,7 @@
 {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            var modalElement =
-                document.getElementById("editStudentModal-@editStudentId.Value"
-                );
-
+            var modalElement = document.getElementById("editStudentModal-@editStudentId.Value");
             if (modalElement) {
                 var modal = new bootstrap.Modal(modalElement);
                 modal.show();

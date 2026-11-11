@@ -9,12 +9,14 @@ namespace StudentRecordManager.Services
     {
         private readonly IStudentRepository _studentRepository;
         private readonly ICurrentUserService _currentUser;
+        private readonly IDepartmentService _departmentService;
         private readonly ILogger<StudentService> _logger;
 
-        public StudentService(IStudentRepository studentRepository, ICurrentUserService currentUser, ILogger<StudentService> logger)
+        public StudentService(IStudentRepository studentRepository, ICurrentUserService currentUser, IDepartmentService departmentService, ILogger<StudentService> logger)
         {
             _studentRepository = studentRepository;
             _currentUser = currentUser;
+            _departmentService = departmentService;
             _logger = logger;
         }
 
@@ -42,6 +44,12 @@ namespace StudentRecordManager.Services
             if (student == null) throw new ArgumentNullException(nameof(student));
 
             ApplyDepartmentRule(student);
+            var departments = await _departmentService.GetAllActiveDepartmentsAsync();
+
+            if (!departments.Any(d => d.DepartmentName.Equals(student.Department, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ArgumentException("Please select a valid active department.");
+            }
             ValidateStudent(student);
 
             student.Name = student.Name.Trim();
@@ -81,6 +89,12 @@ namespace StudentRecordManager.Services
             EnsureCanAccess(existingStudent);
 
             ApplyDepartmentRule(student);
+            var departments = await _departmentService.GetAllActiveDepartmentsAsync();
+
+            if (!departments.Any(d => d.DepartmentName.Equals(student.Department, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ArgumentException("Please select a valid active department.");
+            }
             ValidateStudent(student);
 
             student.Name = student.Name.Trim();

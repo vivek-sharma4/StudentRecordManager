@@ -57,7 +57,7 @@ namespace StudentRecordManager.Repositories
                     student.Department,
                     student.Marks
                 },
-                ommandType: CommandType.StoredProcedure);
+                commandType: CommandType.StoredProcedure);
 
             return rowsAffected > 0;
         }
