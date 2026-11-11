@@ -7,9 +7,9 @@ namespace StudentRecordManager.Repositories
 {
     public class AccountRepository : IAccountRepository
     {
-        private readonly IDbConnectionFactory _connectionFactory;
+        private readonly IDbDataConnection _connectionFactory;
 
-        public AccountRepository(IDbConnectionFactory connectionFactory)
+        public AccountRepository(IDbDataConnection connectionFactory)
         {
             _connectionFactory = connectionFactory;
         }

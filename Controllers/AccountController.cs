@@ -18,11 +18,7 @@ namespace StudentRecordManager.Controllers
         private readonly ILogger<AccountController> _logger;
         private readonly IDepartmentService _departmentService;
 
-        public AccountController(
-            IAccountRepository accountRepository,
-            IPasswordHasher<User> passwordHasher,
-            IDepartmentService departmentService,
-            ILogger<AccountController> logger)
+        public AccountController(IAccountRepository accountRepository, IPasswordHasher<User> passwordHasher, IDepartmentService departmentService, ILogger<AccountController> logger)
         {
             _accountRepository = accountRepository;
             _passwordHasher = passwordHasher;
@@ -46,9 +42,7 @@ namespace StudentRecordManager.Controllers
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(
-            LoginViewModel model,
-            string? returnUrl = null)
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
             if (!ModelState.IsValid)
             {
@@ -144,9 +138,7 @@ namespace StudentRecordManager.Controllers
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(
-            RegisterViewModel model,
-            string? returnUrl = null)
+        public async Task<IActionResult> Register(RegisterViewModel model, string? returnUrl = null)
         {
             if (!ModelState.IsValid)
             {
@@ -254,11 +246,7 @@ namespace StudentRecordManager.Controllers
 
                 if (success)
                 {
-                    _logger.LogInformation(
-                        "Admin {Admin} approved UserID {UserID} and assigned Department {Department}.",
-                        User.Identity?.Name,
-                        userId,
-                        department.DepartmentName);
+                    _logger.LogInformation("Admin {Admin} approved UserID {UserID} and assigned Department {Department}.", User.Identity?.Name, userId, department.DepartmentName);
 
                     TempData["SuccessMessage"] = $"User has been approved and assigned to the {department.DepartmentName} department.";
                 }

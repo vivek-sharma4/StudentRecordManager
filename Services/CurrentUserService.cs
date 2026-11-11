@@ -15,11 +15,8 @@ namespace StudentRecordManager.Services
 
         private System.Security.Claims.ClaimsPrincipal? Principal => _accessor.HttpContext?.User;
 
-        public string Department =>
-            Principal?.FindFirst("Department")?.Value?.Trim() ?? string.Empty;
+        public string Department => Principal?.FindFirst("Department")?.Value?.Trim() ?? string.Empty;
 
-        public bool IsAdmin =>
-            Principal?.IsInRole("Admin") == true ||
-            string.Equals(Department, AdminDepartment, StringComparison.OrdinalIgnoreCase);
+        public bool IsAdmin => Principal?.IsInRole("Admin") == true || string.Equals(Department, AdminDepartment, StringComparison.OrdinalIgnoreCase);
     }
 }

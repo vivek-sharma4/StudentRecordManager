@@ -2,7 +2,7 @@
 
 namespace StudentRecordManager.Data
 {
-    public interface IDbConnectionFactory
+    public interface IDbDataConnection
     {
         DbConnection CreateConnection();
     }

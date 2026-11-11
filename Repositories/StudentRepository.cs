@@ -8,9 +8,9 @@ namespace StudentRecordManager.Repositories
 {
     public class StudentRepository : IStudentRepository
     {
-        private readonly IDbConnectionFactory _connectionFactory;
+        private readonly IDbDataConnection _connectionFactory;
 
-        public StudentRepository(IDbConnectionFactory connectionFactory)
+        public StudentRepository(IDbDataConnection connectionFactory)
         {
             _connectionFactory = connectionFactory;
         }
@@ -19,27 +19,21 @@ namespace StudentRecordManager.Repositories
         {
             await using var connection = _connectionFactory.CreateConnection();
 
-            return await connection.QueryAsync<Student>(
-                "dbo.usp_Student_GetAll", commandType: CommandType.StoredProcedure);
+            return await connection.QueryAsync<Student>("dbo.usp_Student_GetAll", commandType: CommandType.StoredProcedure);
         }
 
-        // Get student by ID
         public async Task<Student?> GetStudentByIdAsync(int studentId)
         {
             await using var connection = _connectionFactory.CreateConnection();
 
-            return await connection.QuerySingleOrDefaultAsync<Student>(
-                "dbo.usp_Student_GetById",
-                new { StudentID = studentId },
-                commandType: CommandType.StoredProcedure);
+            return await connection.QuerySingleOrDefaultAsync<Student>("dbo.usp_Student_GetById", new { StudentID = studentId }, commandType: CommandType.StoredProcedure);
         }
 
         public async Task<int> CreateStudentAsync(Student student)
         {
             await using var connection = _connectionFactory.CreateConnection();
 
-            return await connection.QuerySingleAsync<int>(
-                "dbo.usp_Student_Insert",
+            return await connection.QuerySingleAsync<int>("dbo.usp_Student_Insert",
                 new
                 {
                     student.Name,
@@ -54,18 +48,16 @@ namespace StudentRecordManager.Repositories
         {
             await using var connection = _connectionFactory.CreateConnection();
 
-            var rowsAffected =
-                await connection.QuerySingleAsync<int>(
-                    "dbo.usp_Student_Update",
-                    new
-                    {
-                        student.StudentID,
-                        student.Name,
-                        student.RollNo,
-                        student.Department,
-                        student.Marks
-                    },
-                    commandType: CommandType.StoredProcedure);
+            var rowsAffected = await connection.QuerySingleAsync<int>("dbo.usp_Student_Update",
+                new
+                {
+                    student.StudentID,
+                    student.Name,
+                    student.RollNo,
+                    student.Department,
+                    student.Marks
+                },
+                ommandType: CommandType.StoredProcedure);
 
             return rowsAffected > 0;
         }
@@ -74,14 +66,12 @@ namespace StudentRecordManager.Repositories
         {
             await using var connection = _connectionFactory.CreateConnection();
 
-            var rowsAffected =
-                await connection.QuerySingleAsync<int>(
-                    "dbo.usp_Student_Delete",
-                    new
-                    {
-                        StudentID = studentId
-                    },
-                    commandType: CommandType.StoredProcedure);
+            var rowsAffected = await connection.QuerySingleAsync<int>("dbo.usp_Student_Delete",
+                new
+                {
+                    StudentID = studentId
+                },
+                commandType: CommandType.StoredProcedure);
 
             return rowsAffected > 0;
         }
@@ -97,21 +87,17 @@ namespace StudentRecordManager.Repositories
                 commandType: CommandType.StoredProcedure);
         }
 
-        public async Task<bool> RollNoExistsAsync(
-            string rollNo,
-            int? excludeStudentId = null)
+        public async Task<bool> RollNoExistsAsync(string rollNo, int? excludeStudentId = null)
         {
             await using var connection = _connectionFactory.CreateConnection();
 
-            var count =
-                await connection.QuerySingleAsync<int>(
-                    "dbo.usp_Student_RollNoExists",
-                    new
-                    {
-                        RollNo = rollNo,
-                        StudentID = excludeStudentId
-                    },
-                    commandType: CommandType.StoredProcedure);
+            var count = await connection.QuerySingleAsync<int>("dbo.usp_Student_RollNoExists",
+                new
+                {
+                    RollNo = rollNo,
+                    StudentID = excludeStudentId
+                },
+                commandType: CommandType.StoredProcedure);
 
             return count > 0;
         }

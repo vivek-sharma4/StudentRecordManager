@@ -12,10 +12,7 @@ namespace StudentRecordManager.Controllers
         private readonly IDepartmentService _departmentService;
         private readonly ILogger<StudentController> _logger;
 
-        public StudentController(
-            IStudentService studentService,
-            IDepartmentService departmentService,
-            ILogger<StudentController> logger)
+        public StudentController(IStudentService studentService, IDepartmentService departmentService, ILogger<StudentController> logger)
         {
             _studentService = studentService;
             _departmentService = departmentService;
@@ -36,15 +33,12 @@ namespace StudentRecordManager.Controllers
                     if (department.Length < 3)
                     {
                         ModelState.AddModelError("Department", "Please enter at least 3 characters to search.");
-
                         ViewBag.Department = department;
-
                         students = await _studentService.GetAllStudentsAsync();
                     }
                     else
                     {
                         students = await _studentService.SearchByDepartmentAsync(department);
-
                         ViewBag.Department = department;
                     }
                 }
@@ -58,13 +52,8 @@ namespace StudentRecordManager.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Error retrieving student records. Department: {Department}",
-                    department);
-
+                _logger.LogError(ex, "Error retrieving student records. Department: {Department}", department);
                 TempData["Error"] = "Unable to retrieve student records.";
-
                 await LoadDepartmentsAsync();
                 return View(Enumerable.Empty<Student>());
             }
@@ -77,29 +66,22 @@ namespace StudentRecordManager.Controllers
             if (!ModelState.IsValid)
             {
                 await LoadDepartmentsAsync(student.Department);
-
                 var students = await _studentService.GetAllStudentsAsync();
-
                 ViewBag.OpenCreateModal = true;
-
                 return View("Index", students);
             }
 
             try
             {
                 await _studentService.CreateStudentAsync(student);
-
                 TempData["Success"] = "Student created successfully!";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (InvalidOperationException ex)
             {
                 ModelState.AddModelError(nameof(Student.RollNo), ex.Message);
-
                 await LoadDepartmentsAsync(student.Department);
                 var students = await _studentService.GetAllStudentsAsync();
-
                 ViewBag.OpenCreateModal = true;
 
                 return View("Index", students);
@@ -107,11 +89,8 @@ namespace StudentRecordManager.Controllers
             catch (ArgumentException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-
                 await LoadDepartmentsAsync(student.Department);
-
                 var students = await _studentService.GetAllStudentsAsync();
-
                 ViewBag.OpenCreateModal = true;
 
                 return View("Index", students);
@@ -126,7 +105,6 @@ namespace StudentRecordManager.Controllers
             }
         }
 
-        // Update student
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Student student)
@@ -147,9 +125,7 @@ namespace StudentRecordManager.Controllers
                 if (!ModelState.IsValid)
                 {
                     await LoadDepartmentsAsync();
-
                     var students = await _studentService.GetAllStudentsAsync();
-
                     ViewBag.EditStudentId = id;
 
                     return View("Index", students);
@@ -167,11 +143,8 @@ namespace StudentRecordManager.Controllers
             catch (InvalidOperationException ex)
             {
                 ModelState.AddModelError(nameof(Student.RollNo), ex.Message);
-
                 await LoadDepartmentsAsync();
-
                 var students = await _studentService.GetAllStudentsAsync();
-
                 ViewBag.EditStudentId = id;
 
                 return View("Index", students);
@@ -179,29 +152,21 @@ namespace StudentRecordManager.Controllers
             catch (ArgumentException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-
                 await LoadDepartmentsAsync();
-
                 var students = await _studentService.GetAllStudentsAsync();
-
                 ViewBag.EditStudentId = id;
 
                 return View("Index", students);
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Error updating student {StudentID}.",
-                    id);
-
+                _logger.LogError(ex, "Error updating student {StudentID}.", id);
                 TempData["Error"] = "Unable to update student details.";
 
                 return RedirectToAction(nameof(Index));
             }
         }
 
-        // Delete student
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -221,11 +186,7 @@ namespace StudentRecordManager.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Error deleting student {StudentID}.",
-                    id);
-
+                _logger.LogError(ex, "Error deleting student {StudentID}.", id);
                 TempData["Error"] = "Unable to delete student.";
 
                 return RedirectToAction(nameof(Index));

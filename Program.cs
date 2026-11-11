@@ -45,13 +45,13 @@ builder.Services
 // Add MVC services
 builder.Services.AddControllersWithViews();
 
-// Database connection factory
-builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
+// Database connection
+builder.Services.AddSingleton<IDbDataConnection, DbDataConnection>();
 // Student repository
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 // Student service
 builder.Services.AddScoped<IStudentService, StudentService>();
-
+// Account repository
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 
 // Department repository
@@ -61,6 +61,7 @@ builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 // Current logged-in user service
 builder.Services.AddHttpContextAccessor();
+// Current user service
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services.AddScoped<
@@ -131,7 +132,7 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.MapGet("/database-test", async (
-    IDbConnectionFactory connectionFactory) =>
+    IDbDataConnection connectionFactory) =>
 {
     try
     {

@@ -11,9 +11,7 @@ namespace StudentRecordManager.Services
         private readonly IDepartmentRepository _departmentRepository;
         private readonly ILogger<DepartmentService> _logger;
 
-        public DepartmentService(
-            IDepartmentRepository departmentRepository,
-            ILogger<DepartmentService> logger)
+        public DepartmentService(IDepartmentRepository departmentRepository, ILogger<DepartmentService> logger)
         {
             _departmentRepository = departmentRepository;
             _logger = logger;
@@ -22,8 +20,7 @@ namespace StudentRecordManager.Services
         public async Task<IEnumerable<Department>>
             GetAllActiveDepartmentsAsync()
         {
-            return await _departmentRepository
-                .GetAllActiveDepartmentsAsync();
+            return await _departmentRepository.GetAllActiveDepartmentsAsync();
         }
 
         public async Task<Department?> GetDepartmentByIdAsync(
@@ -32,8 +29,7 @@ namespace StudentRecordManager.Services
             if (departmentId <= 0)
                 throw new ArgumentException("Invalid department ID.");
 
-            return await _departmentRepository
-                .GetDepartmentByIdAsync(departmentId);
+            return await _departmentRepository.GetDepartmentByIdAsync(departmentId);
         }
 
         public async Task<int> CreateDepartmentAsync(
@@ -59,20 +55,13 @@ namespace StudentRecordManager.Services
             {
                 int departmentId = await _departmentRepository.CreateDepartmentAsync(departmentName);
 
-                _logger.LogInformation(
-                    "Department created successfully. DepartmentID: {DepartmentID}, DepartmentName: {DepartmentName}",
-                    departmentId,
-                    departmentName);
+                _logger.LogInformation("Department created successfully. DepartmentID: {DepartmentID}, DepartmentName: {DepartmentName}", departmentId, departmentName);
 
                 return departmentId;
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Error creating department. DepartmentName: {DepartmentName}",
-                    departmentName);
-
+                _logger.LogError(ex, "Error creating department. DepartmentName: {DepartmentName}", departmentName);
                 throw;
             }
         }

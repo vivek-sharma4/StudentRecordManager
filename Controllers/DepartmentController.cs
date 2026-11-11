@@ -12,9 +12,7 @@ namespace StudentRecordManager.Controllers
         private readonly IDepartmentService _departmentService;
         private readonly ILogger<DepartmentController> _logger;
 
-        public DepartmentController(
-            IDepartmentService departmentService,
-            ILogger<DepartmentController> logger)
+        public DepartmentController(IDepartmentService departmentService, ILogger<DepartmentController> logger)
         {
             _departmentService = departmentService;
             _logger = logger;
@@ -25,15 +23,13 @@ namespace StudentRecordManager.Controllers
         {
             try
             {
-                var departments = await _departmentService
-                    .GetAllActiveDepartmentsAsync();
+                var departments = await _departmentService.GetAllActiveDepartmentsAsync();
 
                 return View(departments);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to retrieve department list. Action: {Action}", nameof(Index));
-
                 TempData["Error"] = "Unable to retrieve departments.";
 
                 return View(Enumerable.Empty<Department>());
@@ -53,7 +49,6 @@ namespace StudentRecordManager.Controllers
             try
             {
                 await _departmentService.CreateDepartmentAsync(departmentName);
-
                 TempData["Success"] = "Department created successfully!";
             }
             catch (ArgumentException ex)
@@ -63,7 +58,6 @@ namespace StudentRecordManager.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create department. DepartmentName: {DepartmentName}", departmentName);
-
                 TempData["Error"] = "Department could not be created. It may already exist.";
             }
 

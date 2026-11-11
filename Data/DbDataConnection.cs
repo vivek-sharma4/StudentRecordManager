@@ -3,11 +3,11 @@ using System.Data.Common;
 
 namespace StudentRecordManager.Data
 {
-    public class DbConnectionFactory : IDbConnectionFactory
+    public class DbDataConnection : IDbDataConnection
     {
         private readonly IConfiguration _configuration;
 
-        public DbConnectionFactory(IConfiguration configuration)
+        public DbDataConnection(IConfiguration configuration)
         {
             _configuration = configuration;
         }

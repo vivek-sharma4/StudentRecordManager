@@ -18,14 +18,12 @@ namespace StudentRecordManager.Services
             _logger = logger;
         }
 
-        // Get all students
         public async Task<IEnumerable<Student>> GetAllStudentsAsync()
         {
             var students = await _studentRepository.GetAllStudentsAsync();
             return ApplyDepartmentScope(students);
         }
 
-        // Get student by ID
         public async Task<Student?> GetStudentByIdAsync(int studentId)
         {
             if (studentId <= 0) throw new ArgumentException("Invalid student ID.");
@@ -70,7 +68,6 @@ namespace StudentRecordManager.Services
             }
         }
 
-        // Update student
         public async Task<bool> UpdateStudentAsync(Student student)
         {
             if (student == null) throw new ArgumentNullException(nameof(student));
@@ -81,10 +78,8 @@ namespace StudentRecordManager.Services
             if (existingStudent == null)
                 return false;
 
-            // The user must have access to the record being changed
             EnsureCanAccess(existingStudent);
 
-            // Non-admins cannot move a student to another department
             ApplyDepartmentRule(student);
             ValidateStudent(student);
 
@@ -115,7 +110,6 @@ namespace StudentRecordManager.Services
             }
         }
 
-        // Delete student
         public async Task<bool> DeleteStudentAsync(int studentId)
         {
             if (studentId <= 0)
@@ -146,7 +140,6 @@ namespace StudentRecordManager.Services
             }
         }
 
-        // Search students by department
         public async Task<IEnumerable<Student>> SearchByDepartmentAsync(string department)
         {
             if (string.IsNullOrWhiteSpace(department))
@@ -173,7 +166,7 @@ namespace StudentRecordManager.Services
         private bool IsOwnDepartment(string? department)
         {
             if (string.IsNullOrWhiteSpace(_currentUser.Department))
-                return false; // fail closed
+                return false;
 
             return string.Equals(department?.Trim(), _currentUser.Department, StringComparison.OrdinalIgnoreCase);
         }
@@ -188,7 +181,6 @@ namespace StudentRecordManager.Services
             throw new UnauthorizedAccessException("You do not have permission to access this student record.");
         }
 
-        // Non-admins can only create/update students in their own department
         private void ApplyDepartmentRule(Student student)
         {
             if (!_currentUser.IsAdmin)

@@ -1,12 +1,9 @@
-﻿
-// Get Anti-Forgery Token
-function getAntiForgeryToken() {
+﻿function getAntiForgeryToken() {
     return document.querySelector(
         'input[name="__RequestVerificationToken"]'
     )?.value || '';
 }
 
-// Display page messages
 function showPageMessage(message, type = 'success') {
     const banner = document.getElementById('pageAlertBanner');
     const text = document.getElementById('pageAlertText');
@@ -21,7 +18,6 @@ function showPageMessage(message, type = 'success') {
     banner.style.display = 'block';
 }
 
-// Display modal errors
 function showModalError(elementId, message) {
     const element = document.getElementById(elementId);
 
@@ -40,7 +36,6 @@ function clearModalError(elementId) {
     }
 }
 
-// Get error message from server
 async function getErrorMessage(response) {
     try {
         const data = await response.json();
@@ -50,7 +45,6 @@ async function getErrorMessage(response) {
     }
 }
 
-// Close Bootstrap modal
 function closeModal(modalId) {
     const modalElement = document.getElementById(modalId);
 
@@ -59,9 +53,6 @@ function closeModal(modalId) {
     }
 }
 
-// ---------------- EDIT STUDENT ----------------
-
-// Open Edit Modal
 async function openEditModal(id) {
     try {
         const response = await fetch(`/Student/GetStudent/${id}`);
@@ -89,7 +80,6 @@ async function openEditModal(id) {
     }
 }
 
-// Submit Edit Student
 async function submitEditStudent(event) {
     event.preventDefault();
 
@@ -129,11 +119,7 @@ async function submitEditStudent(event) {
     }
 }
 
-// ---------------- DELETE STUDENT ----------------
-
 let selectedStudentId = null;
-
-// Open Delete Modal
 function openDeleteModal(id, name, rollNo, department) {
     selectedStudentId = id;
 
@@ -146,7 +132,6 @@ function openDeleteModal(id, name, rollNo, department) {
     ).show();
 }
 
-// Execute Delete
 async function executeDeleteStudent() {
     if (!selectedStudentId) {
         showPageMessage('Please select a student to delete.', 'danger');
@@ -180,9 +165,6 @@ async function executeDeleteStudent() {
     }
 }
 
-// ---------------- CREATE STUDENT ----------------
-
-// Submit Create Student
 async function submitCreateStudent(event) {
     event.preventDefault();
 
@@ -223,7 +205,6 @@ async function submitCreateStudent(event) {
     }
 }
 
-// Register Create Form Submit
 document.addEventListener('DOMContentLoaded', function () {
     const createForm = document.getElementById('createStudentForm');
 

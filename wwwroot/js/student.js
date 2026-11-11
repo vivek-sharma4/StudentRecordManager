@@ -26,8 +26,6 @@
     const tableHost = document.getElementById('studentTable');
     const alertHost = document.getElementById('alertHost');
 
-    // ---------- Helpers ----------
-
     function showAlert(message, type) {
         alertHost.innerHTML = '';
 

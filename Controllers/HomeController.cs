@@ -18,9 +18,7 @@ namespace StudentRecordManager.Controllers
         public IActionResult Error()
         {
             var requestId = HttpContext.TraceIdentifier;
-
             _logger.LogError("An unexpected application error occurred. RequestId: {RequestId}", requestId);
-
             return View(new ErrorViewModel
             {
                 RequestId = requestId
