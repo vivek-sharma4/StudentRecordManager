@@ -93,7 +93,8 @@ if (app.Environment.IsDevelopment())
     {
         var admin = new User
         {
-            Email = adminEmail
+            Email = adminEmail,
+            IsAdmin = true
         };
 
         admin.PasswordHash = passwordHasher.HashPassword(admin, adminPassword);

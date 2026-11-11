@@ -111,6 +111,7 @@ namespace StudentRecordManager.Controllers
 
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred while creating the student.");
 
+                await LoadDepartmentsAsync(student.Department);
                 return View(student);
             }
         }

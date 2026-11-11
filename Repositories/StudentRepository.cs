@@ -37,14 +37,20 @@ namespace StudentRecordManager.Repositories
                 commandType: CommandType.StoredProcedure);
         }
 
-        // Create student
         public async Task<int> CreateStudentAsync(Student student)
         {
             await using var connection =
                 _connectionFactory.CreateConnection();
 
-            return await connection.QuerySingleAsync<int>("dbo.usp_Student_Insert",
-                student,
+            return await connection.QuerySingleAsync<int>(
+                "dbo.usp_Student_Insert",
+                new
+                {
+                    student.Name,
+                    student.RollNo,
+                    student.Department,
+                    student.Marks
+                },
                 commandType: CommandType.StoredProcedure);
         }
 
