@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using StudentRecordManager.Models;
 using StudentRecordManager.Services.Interfaces;
 
@@ -13,15 +12,17 @@ namespace StudentRecordManager.Controllers
         private readonly IDepartmentService _departmentService;
         private readonly ILogger<StudentController> _logger;
 
-        public StudentController(IStudentService studentService, IDepartmentService departmentService, ILogger<StudentController> logger)
+        public StudentController(
+            IStudentService studentService,
+            IDepartmentService departmentService,
+            ILogger<StudentController> logger)
         {
             _studentService = studentService;
             _departmentService = departmentService;
             _logger = logger;
         }
 
-        // Display all students and search by department
-
+        [HttpGet]
         public async Task<IActionResult> Index(string? department)
         {
             try
@@ -39,19 +40,20 @@ namespace StudentRecordManager.Controllers
                         ViewBag.Department = department;
 
                         students = await _studentService.GetAllStudentsAsync();
-
-                        return View(students);
                     }
+                    else
+                    {
+                        students = await _studentService.SearchByDepartmentAsync(department);
 
-                    students = await _studentService.SearchByDepartmentAsync(department);
-
-                    ViewBag.Department = department;
+                        ViewBag.Department = department;
+                    }
                 }
                 else
                 {
                     students = await _studentService.GetAllStudentsAsync();
                 }
 
+                await LoadDepartmentsAsync();
                 return View(students);
             }
             catch (Exception ex)
@@ -63,20 +65,11 @@ namespace StudentRecordManager.Controllers
 
                 TempData["Error"] = "Unable to retrieve student records.";
 
+                await LoadDepartmentsAsync();
                 return View(Enumerable.Empty<Student>());
             }
         }
 
-
-        [HttpGet]
-        public async Task<IActionResult> Create()
-        {
-            await LoadDepartmentsAsync();
-
-            return View();
-        }
-
-        // Save new student
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Student student)
@@ -84,7 +77,12 @@ namespace StudentRecordManager.Controllers
             if (!ModelState.IsValid)
             {
                 await LoadDepartmentsAsync(student.Department);
-                return View(student);
+
+                var students = await _studentService.GetAllStudentsAsync();
+
+                ViewBag.OpenCreateModal = true;
+
+                return View("Index", students);
             }
 
             try
@@ -98,44 +96,31 @@ namespace StudentRecordManager.Controllers
             catch (InvalidOperationException ex)
             {
                 ModelState.AddModelError(nameof(Student.RollNo), ex.Message);
-                return View(student);
+
+                await LoadDepartmentsAsync(student.Department);
+                var students = await _studentService.GetAllStudentsAsync();
+
+                ViewBag.OpenCreateModal = true;
+
+                return View("Index", students);
             }
             catch (ArgumentException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                return View(student);
+
+                await LoadDepartmentsAsync(student.Department);
+
+                var students = await _studentService.GetAllStudentsAsync();
+
+                ViewBag.OpenCreateModal = true;
+
+                return View("Index", students);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating student.");
 
-                ModelState.AddModelError(string.Empty, "An unexpected error occurred while creating the student.");
-
-                await LoadDepartmentsAsync(student.Department);
-                return View(student);
-            }
-        }
-
-        // Display edit form
-        [HttpGet]
-        public async Task<IActionResult> Edit(int id)
-        {
-            try
-            {
-                var student = await _studentService.GetStudentByIdAsync(id);
-
-                if (student == null)
-                    return NotFound();
-
-                await LoadDepartmentsAsync(student.Department);
-
-                return View(student);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving student {StudentID} for editing.", id);
-
-                TempData["Error"] = "Unable to retrieve student details.";
+                TempData["Error"] = "An unexpected error occurred while creating the student.";
 
                 return RedirectToAction(nameof(Index));
             }
@@ -146,17 +131,30 @@ namespace StudentRecordManager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Student student)
         {
-            if (id != student.StudentID)
+            if (id <= 0)
                 return BadRequest();
-
-            if (!ModelState.IsValid)
-            {
-                await LoadDepartmentsAsync(student.Department);
-                return View(student);
-            }
 
             try
             {
+                var existingStudent = await _studentService.GetStudentByIdAsync(id);
+
+                if (existingStudent == null)
+                    return NotFound();
+
+                student.StudentID = existingStudent.StudentID;
+                student.Department = existingStudent.Department;
+
+                if (!ModelState.IsValid)
+                {
+                    await LoadDepartmentsAsync();
+
+                    var students = await _studentService.GetAllStudentsAsync();
+
+                    ViewBag.EditStudentId = id;
+
+                    return View("Index", students);
+                }
+
                 bool updated = await _studentService.UpdateStudentAsync(student);
 
                 if (!updated)
@@ -169,55 +167,51 @@ namespace StudentRecordManager.Controllers
             catch (InvalidOperationException ex)
             {
                 ModelState.AddModelError(nameof(Student.RollNo), ex.Message);
-                return View(student);
+
+                await LoadDepartmentsAsync();
+
+                var students = await _studentService.GetAllStudentsAsync();
+
+                ViewBag.EditStudentId = id;
+
+                return View("Index", students);
             }
             catch (ArgumentException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                return View(student);
+
+                await LoadDepartmentsAsync();
+
+                var students = await _studentService.GetAllStudentsAsync();
+
+                ViewBag.EditStudentId = id;
+
+                return View("Index", students);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating student {StudentID}.", id);
+                _logger.LogError(
+                    ex,
+                    "Error updating student {StudentID}.",
+                    id);
 
-                ModelState.AddModelError(string.Empty, "An unexpected error occurred while updating the student.");
-
-                return View(student);
-            }
-        }
-
-        // Display delete confirmation
-        [HttpGet]
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
-                var student = await _studentService.GetStudentByIdAsync(id);
-
-                if (student == null)
-                    return NotFound();
-
-                return View(student);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving student {StudentID} for deletion.", id);
-
-                TempData["Error"] = "Unable to retrieve student details.";
+                TempData["Error"] = "Unable to update student details.";
 
                 return RedirectToAction(nameof(Index));
             }
         }
 
         // Delete student
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                bool deleted = await _studentService.DeleteStudentAsync(id);
+                if (id <= 0)
+                    return BadRequest();
 
+                bool deleted = await _studentService.DeleteStudentAsync(id);
                 if (!deleted)
                     return NotFound();
 
@@ -227,23 +221,23 @@ namespace StudentRecordManager.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting student {StudentID}.", id);
+                _logger.LogError(
+                    ex,
+                    "Error deleting student {StudentID}.",
+                    id);
 
                 TempData["Error"] = "Unable to delete student.";
 
                 return RedirectToAction(nameof(Index));
             }
         }
+
         private async Task LoadDepartmentsAsync(string? selectedDepartment = null)
         {
-            var departments = await _departmentService
-                .GetAllActiveDepartmentsAsync();
+            var departments = await _departmentService.GetAllActiveDepartmentsAsync();
 
-            ViewBag.Departments = new SelectList(
-                departments,
-                "DepartmentName",
-                "DepartmentName",
-                selectedDepartment);
+            ViewBag.Departments = departments;
+            ViewBag.SelectedDepartment = selectedDepartment;
         }
     }
 }

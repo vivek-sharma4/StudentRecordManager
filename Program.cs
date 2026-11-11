@@ -59,6 +59,9 @@ builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
 // Department service
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+// Current logged-in user service
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services.AddScoped<
     Microsoft.AspNetCore.Identity.IPasswordHasher<User>,

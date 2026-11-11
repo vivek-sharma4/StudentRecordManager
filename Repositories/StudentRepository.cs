@@ -1,5 +1,4 @@
-﻿
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using StudentRecordManager.Data;
 using StudentRecordManager.Models;
@@ -16,31 +15,28 @@ namespace StudentRecordManager.Repositories
             _connectionFactory = connectionFactory;
         }
 
-        // Get all students
         public async Task<IEnumerable<Student>> GetAllStudentsAsync()
         {
-            await using var connection =
-                _connectionFactory.CreateConnection();
+            await using var connection = _connectionFactory.CreateConnection();
 
-            return await connection.QueryAsync<Student>("dbo.usp_Student_GetAll",
-                commandType: CommandType.StoredProcedure);
+            return await connection.QueryAsync<Student>(
+                "dbo.usp_Student_GetAll", commandType: CommandType.StoredProcedure);
         }
 
         // Get student by ID
         public async Task<Student?> GetStudentByIdAsync(int studentId)
         {
-            await using var connection =
-                _connectionFactory.CreateConnection();
+            await using var connection = _connectionFactory.CreateConnection();
 
-            return await connection.QuerySingleOrDefaultAsync<Student>("dbo.usp_Student_GetById",
+            return await connection.QuerySingleOrDefaultAsync<Student>(
+                "dbo.usp_Student_GetById",
                 new { StudentID = studentId },
                 commandType: CommandType.StoredProcedure);
         }
 
         public async Task<int> CreateStudentAsync(Student student)
         {
-            await using var connection =
-                _connectionFactory.CreateConnection();
+            await using var connection = _connectionFactory.CreateConnection();
 
             return await connection.QuerySingleAsync<int>(
                 "dbo.usp_Student_Insert",
@@ -54,59 +50,68 @@ namespace StudentRecordManager.Repositories
                 commandType: CommandType.StoredProcedure);
         }
 
-        // Update student
         public async Task<bool> UpdateStudentAsync(Student student)
         {
-            await using var connection =
-                _connectionFactory.CreateConnection();
+            await using var connection = _connectionFactory.CreateConnection();
 
-            var rowsAffected = await connection.QuerySingleAsync<int>("dbo.usp_Student_Update",
-                student,
-                commandType: CommandType.StoredProcedure);
+            var rowsAffected =
+                await connection.QuerySingleAsync<int>(
+                    "dbo.usp_Student_Update",
+                    new
+                    {
+                        student.StudentID,
+                        student.Name,
+                        student.RollNo,
+                        student.Department,
+                        student.Marks
+                    },
+                    commandType: CommandType.StoredProcedure);
 
             return rowsAffected > 0;
         }
 
-        // Delete student
         public async Task<bool> DeleteStudentAsync(int studentId)
         {
-            await using var connection =
-                _connectionFactory.CreateConnection();
+            await using var connection = _connectionFactory.CreateConnection();
 
-            var rowsAffected = await connection.QuerySingleAsync<int>("dbo.usp_Student_Delete",
-                new { StudentID = studentId },
-                commandType: CommandType.StoredProcedure);
+            var rowsAffected =
+                await connection.QuerySingleAsync<int>(
+                    "dbo.usp_Student_Delete",
+                    new
+                    {
+                        StudentID = studentId
+                    },
+                    commandType: CommandType.StoredProcedure);
 
             return rowsAffected > 0;
         }
 
-        // Search students by department
         public async Task<IEnumerable<Student>> SearchByDepartmentAsync(
             string department)
         {
-            await using var connection =
-                _connectionFactory.CreateConnection();
+            await using var connection = _connectionFactory.CreateConnection();
 
-            return await connection.QueryAsync<Student>("dbo.usp_Student_SearchByDepartment",
+            return await connection.QueryAsync<Student>(
+                "dbo.usp_Student_SearchByDepartment",
                 new { Department = department },
                 commandType: CommandType.StoredProcedure);
         }
 
-        // Check whether RollNo already exists
         public async Task<bool> RollNoExistsAsync(
             string rollNo,
             int? excludeStudentId = null)
         {
-            await using var connection =
-                _connectionFactory.CreateConnection();
+            await using var connection = _connectionFactory.CreateConnection();
 
-            var count = await connection.QuerySingleAsync<int>("dbo.usp_Student_RollNoExists",
-                new
-                {
-                    RollNo = rollNo,
-                    StudentID = excludeStudentId
-                },
-                commandType: CommandType.StoredProcedure);
+            var count =
+                await connection.QuerySingleAsync<int>(
+                    "dbo.usp_Student_RollNoExists",
+                    new
+                    {
+                        RollNo = rollNo,
+                        StudentID = excludeStudentId
+                    },
+                    commandType: CommandType.StoredProcedure);
 
             return count > 0;
         }

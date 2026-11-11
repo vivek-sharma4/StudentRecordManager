@@ -85,14 +85,18 @@ namespace StudentRecordManager.Controllers
                     return RedirectToAction(nameof(PendingApproval));
                 }
 
+
+                var department = string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : user.Department?.Trim() ?? string.Empty;
+
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
                     new Claim(ClaimTypes.Name, user.Email),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.Role, user.Role),
-                    new Claim("IsAuthorised", user.IsAuthorised.ToString())
-                };
+                    new Claim("IsAuthorised", user.IsAuthorised.ToString()),
+                    new Claim("Department", department)
+};
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
