@@ -17,7 +17,7 @@ namespace StudentRecordManager.Repositories
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             const string query = @"
-                SELECT UserID, Email, PasswordHash, IsAuthorised, Role, CreatedAt
+                SELECT UserID, Email, PasswordHash, IsAuthorised, Role, CreatedAt, Department
                 FROM Users
                 WHERE Email = @Email";
 
@@ -28,7 +28,7 @@ namespace StudentRecordManager.Repositories
         public async Task<User?> GetUserByIdAsync(int userId)
         {
             const string query = @"
-                SELECT UserID, Email, PasswordHash, IsAuthorised, Role, CreatedAt
+                SELECT UserID, Email, PasswordHash, IsAuthorised, Role, CreatedAt, Department
                 FROM Users
                 WHERE UserID = @UserID";
 
@@ -39,8 +39,8 @@ namespace StudentRecordManager.Repositories
         public async Task<int> CreateUserAsync(User user)
         {
             const string query = @"
-                INSERT INTO Users (Email, PasswordHash, IsAuthorised, Role, CreatedAt)
-                VALUES (@Email, @PasswordHash, @IsAuthorised, @Role, @CreatedAt);
+                INSERT INTO Users (Email, PasswordHash, IsAuthorised, Role, CreatedAt, Department)
+                VALUES (@Email, @PasswordHash, @IsAuthorised, @Role, @CreatedAt, @Department);
                 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
             await using var connection = _connectionFactory.CreateConnection();
@@ -62,7 +62,7 @@ namespace StudentRecordManager.Repositories
         public async Task<IEnumerable<User>> GetPendingUsersAsync()
         {
             const string query = @"
-                SELECT UserID, Email, PasswordHash, IsAuthorised, Role, CreatedAt
+                SELECT UserID, Email, PasswordHash, IsAuthorised, Role, CreatedAt, Department
                 FROM Users
                 WHERE IsAuthorised = 0 AND Role != 'Admin'
                 ORDER BY CreatedAt DESC";
@@ -74,7 +74,7 @@ namespace StudentRecordManager.Repositories
         public async Task<IEnumerable<User>> GetAllUsersAsync()
         {
             const string query = @"
-                SELECT UserID, Email, PasswordHash, IsAuthorised, Role, CreatedAt
+                SELECT UserID, Email, PasswordHash, IsAuthorised, Role, CreatedAt, Department
                 FROM Users
                 ORDER BY CreatedAt DESC";
 
@@ -87,6 +87,27 @@ namespace StudentRecordManager.Repositories
             const string query = @"DELETE FROM Users WHERE UserID = @UserID";
             await using var connection = _connectionFactory.CreateConnection();
             var rows = await connection.ExecuteAsync(query, new { UserID = userId });
+            return rows > 0;
+        }
+
+        public async Task<bool> ApproveUserAsync(int userId, string department)
+        {
+            const string query = @"
+                UPDATE Users
+                SET IsAuthorised = 1,
+                Department = @Department
+                WHERE UserID = @UserID";
+
+            await using var connection = _connectionFactory.CreateConnection();
+
+            var rows = await connection.ExecuteAsync(
+                query,
+                new
+                {
+                    UserID = userId,
+                    Department = department
+                });
+
             return rows > 0;
         }
     }

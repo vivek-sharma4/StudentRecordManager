@@ -13,5 +13,6 @@ namespace StudentRecordManager.Repositories.Interfaces
         Task<IEnumerable<User>> GetPendingUsersAsync();
         Task<IEnumerable<User>> GetAllUsersAsync();
         Task<bool> DeleteUserAsync(int userId);
+        Task<bool> ApproveUserAsync(int userId, string department);
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StudentRecordManager.Models;
 using StudentRecordManager.Repositories.Interfaces;
+using StudentRecordManager.Services.Interfaces;
 using StudentRecordManager.ViewModels;
 using System.Security.Claims;
 
@@ -15,14 +16,17 @@ namespace StudentRecordManager.Controllers
         private readonly IAccountRepository _accountRepository;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly ILogger<AccountController> _logger;
+        private readonly IDepartmentService _departmentService;
 
         public AccountController(
             IAccountRepository accountRepository,
             IPasswordHasher<User> passwordHasher,
+            IDepartmentService departmentService,
             ILogger<AccountController> logger)
         {
             _accountRepository = accountRepository;
             _passwordHasher = passwordHasher;
+            _departmentService = departmentService;
             _logger = logger;
         }
 
@@ -69,7 +73,7 @@ namespace StudentRecordManager.Controllers
                 if (verificationResult == PasswordVerificationResult.Failed)
                 {
                     ModelState.AddModelError(string.Empty, "Invalid email address or password.");
-                    
+
                     _logger.LogWarning("Failed login attempt for user {Email}", model.Email);
                     return View(model);
                 }
@@ -91,7 +95,7 @@ namespace StudentRecordManager.Controllers
                 };
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                
+
                 var principal = new ClaimsPrincipal(identity);
 
                 var authProperties = new AuthenticationProperties
@@ -102,7 +106,7 @@ namespace StudentRecordManager.Controllers
                 };
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
-               
+
                 _logger.LogInformation("User {Email} logged in successfully.", user.Email);
 
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -163,7 +167,8 @@ namespace StudentRecordManager.Controllers
                     Email = trimmedEmail,
                     IsAuthorised = false,
                     Role = "User",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    Department = string.Empty,
                 };
 
                 newUser.PasswordHash = _passwordHasher.HashPassword(newUser, model.Password);
@@ -200,14 +205,20 @@ namespace StudentRecordManager.Controllers
             {
                 var pendingUsers = await _accountRepository.GetPendingUsersAsync();
                 var allUsers = await _accountRepository.GetAllUsersAsync();
+                var departments = await _departmentService.GetAllActiveDepartmentsAsync();
 
                 ViewBag.AllUsers = allUsers;
+                ViewBag.Departments = departments;
+
                 return View(pendingUsers);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving pending registration requests.");
                 TempData["ErrorMessage"] = "Unable to retrieve registration requests.";
+
+                ViewBag.Departments = Enumerable.Empty<Department>();
+
                 return View(new List<User>());
             }
         }
@@ -215,19 +226,41 @@ namespace StudentRecordManager.Controllers
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ApproveUser(int userId)
+        public async Task<IActionResult> ApproveUser(int userId, int departmentId)
         {
+            if (departmentId <= 0)
+            {
+                TempData["ErrorMessage"] = "Please select a department before approving the user.";
+                return RedirectToAction(nameof(UserApprovals));
+            }
+
             try
             {
-                var success = await _accountRepository.UpdateUserAuthorizationAsync(userId, true);
+                var departments = await _departmentService.GetAllActiveDepartmentsAsync();
+
+                var department = departments.FirstOrDefault(d => d.DepartmentID == departmentId);
+
+                if (department == null)
+                {
+                    TempData["ErrorMessage"] = "The selected department is invalid or inactive.";
+                    return RedirectToAction(nameof(UserApprovals));
+                }
+
+                var success = await _accountRepository.ApproveUserAsync(userId, department.DepartmentName);
+
                 if (success)
                 {
-                    _logger.LogInformation("Admin {Admin} approved registration for UserID {UserID}.", User.Identity?.Name, userId);
-                    TempData["SuccessMessage"] = "User registration has been approved. The user may now access the portal.";
+                    _logger.LogInformation(
+                        "Admin {Admin} approved UserID {UserID} and assigned Department {Department}.",
+                        User.Identity?.Name,
+                        userId,
+                        department.DepartmentName);
+
+                    TempData["SuccessMessage"] = $"User has been approved and assigned to the {department.DepartmentName} department.";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "User not found or authorization failed.";
+                    TempData["ErrorMessage"] = "User not found or approval failed.";
                 }
             }
             catch (Exception ex)

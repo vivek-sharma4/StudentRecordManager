@@ -1,7 +1,12 @@
 ﻿@model IEnumerable<StudentRecordManager.Models.User>
 @{
     ViewData["Title"] = "User Approvals - Admin Dashboard";
-    var allUsers = ViewBag.AllUsers as IEnumerable<StudentRecordManager.Models.User> ?? Enumerable.Empty<StudentRecordManager.Models.User>();
+
+    var allUsers = ViewBag.AllUsers as IEnumerable<StudentRecordManager.Models.User>
+        ?? Enumerable.Empty<StudentRecordManager.Models.User>();
+
+    var departments = ViewBag.Departments as IEnumerable<StudentRecordManager.Models.Department>
+        ?? Enumerable.Empty<StudentRecordManager.Models.Department>();
 }
 
 <div class="container py-4">
@@ -77,19 +82,48 @@
                                     </span>
                                 </td>
                                 <td class="text-end pe-4">
-                                    <div class="d-inline-flex gap-2">
-                                        <form asp-controller="Account" asp-action="ApproveUser" method="post" class="d-inline">
+                                    <div class="d-inline-flex align-items-center gap-2">
+
+                                        <form asp-controller="Account"
+                                              asp-action="ApproveUser"
+                                              method="post"
+                                              class="d-inline-flex align-items-center gap-2">
+
                                             <input type="hidden" name="userId" value="@user.UserID" />
-                                            <button type="submit" class="btn btn-success btn-sm px-3 fw-semibold shadow-xs">
+
+                                            <select name="departmentId"
+                                                    class="form-select form-select-sm"
+                                                    required
+                                                    style="min-width: 180px;">
+
+                                                <option value="">Select Department</option>
+
+                                                @foreach (var department in departments)
+                                                {
+                                                    <option value="@department.DepartmentID">@department.DepartmentName</option>
+                                                }
+                                            </select>
+
+                                            <button type="submit"
+                                                    class="btn btn-success btn-sm px-3 fw-semibold shadow-xs">
                                                 Approve
                                             </button>
                                         </form>
-                                        <form asp-controller="Account" asp-action="RejectUser" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to reject this registration request?');">
+
+                                        <form asp-controller="Account"
+                                              asp-action="RejectUser"
+                                              method="post"
+                                              class="d-inline"
+                                              onsubmit="return confirm('Are you sure you want to reject this registration request?');">
+
                                             <input type="hidden" name="userId" value="@user.UserID" />
-                                            <button type="submit" class="btn btn-outline-danger btn-sm px-2">
+
+                                            <button type="submit"
+                                                    class="btn btn-outline-danger btn-sm px-2">
                                                 Reject
                                             </button>
                                         </form>
+
                                     </div>
                                 </td>
                             </tr>
@@ -111,6 +145,7 @@
                         <th class="ps-4">Email Address</th>
                         <th>Role</th>
                         <th>Status</th>
+                        <th>Department</th>
                         <th>Registered Date</th>
                     </tr>
                 </thead>
@@ -136,6 +171,18 @@
                                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
                                         Pending Approval
                                     </span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(user.Department))
+                                {
+                                    <span class="badge bg-light text-dark border">
+                                        @user.Department
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Not assigned</span>
                                 }
                             </td>
                             <td class="text-muted small">@user.CreatedAt.ToString("yyyy-MM-dd")</td>
