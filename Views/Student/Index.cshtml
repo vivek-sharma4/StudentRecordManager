@@ -58,7 +58,7 @@
     }
 
     <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle">
+        <table class="table table-bordered align-middle">
             <thead class="table-dark">
                 <tr>
                     <th>Student ID</th>
@@ -106,7 +106,8 @@
 @foreach (var student in students)
 {
     <div class="modal fade" id="editStudentModal-@student.StudentID" tabindex="-1"
-         aria-labelledby="editStudentModalLabel-@student.StudentID" aria-hidden="true">
+     aria-labelledby="editStudentModalLabel-@student.StudentID"
+     data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -153,8 +154,9 @@
         </div>
     </div>
 
-    <div class="modal fade" id="deleteStudentModal-@student.StudentID" tabindex="-1"
-         aria-labelledby="deleteStudentModalLabel-@student.StudentID" aria-hidden="true">
+    <div class="modal fade" id="deleteStudentModal-@student.StudentID" tabindex="-1" 
+    aria-labelledby="deleteStudentModalLabel-@student.StudentID" data-bs-backdrop="static" 
+    data-bs-keyboard="false" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -185,7 +187,8 @@
 
 <!-- Create Student Modal -->
 <div class="modal fade" id="createStudentModal" tabindex="-1"
-     aria-labelledby="createStudentModalLabel" aria-hidden="true">
+     aria-labelledby="createStudentModalLabel" data-bs-backdrop="static"
+     data-bs-keyboard="false" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -210,18 +213,42 @@
                         }
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Department</label>
-                        <select name="Department" class="form-select" required>
-                            <option value="">-- Select Department --</option>
-                            @foreach (var department in departments)
-                            {
-                                <option value="@department.DepartmentName"
-                                        selected="@(ViewBag.SelectedDepartment?.ToString() == department.DepartmentName)">
-                                    @department.DepartmentName
-                                </option>
-                            }
-                        </select>
-                    </div>
+<label class="form-label">Department</label>
+ 
+    @if (User.IsInRole("Admin"))
+    {
+<select name="Department" class="form-select" required>
+<option value="">-- Select Department --</option>
+ 
+            @foreach (var department in departments)
+            {
+<option value="@department.DepartmentName"
+                        selected="@(ViewBag.SelectedDepartment?.ToString() == department.DepartmentName)">
+                    @department.DepartmentName
+</option>
+            }
+</select>
+    }
+    else
+    {
+<input type="text"
+               class="form-control"
+               value="@ViewBag.SelectedDepartment"
+               readonly />
+ 
+        <input type="hidden"
+               name="Department"
+               value="@ViewBag.SelectedDepartment" />
+    }
+ 
+    @if (ViewData.ModelState.TryGetValue("Department", out var departmentError)
+    && departmentError.Errors.Count > 0)
+{
+    <span class="text-danger">
+        @departmentError.Errors[0].ErrorMessage
+    </span>
+}
+</div>
                     <div class="mb-3">
                         <label class="form-label">Marks</label>
                         <input type="number" name="Marks" class="form-control"

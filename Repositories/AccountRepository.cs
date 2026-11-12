@@ -7,11 +7,11 @@ namespace StudentRecordManager.Repositories
 {
     public class AccountRepository : IAccountRepository
     {
-        private readonly IDbDataConnection _connectionFactory;
+        private readonly IDbDataConnection _connectionData;
 
-        public AccountRepository(IDbDataConnection connectionFactory)
+        public AccountRepository(IDbDataConnection connectionData)
         {
-            _connectionFactory = connectionFactory;
+            _connectionData = connectionData;
         }
 
         public async Task<User?> GetUserByEmailAsync(string email)
@@ -21,7 +21,7 @@ namespace StudentRecordManager.Repositories
                 FROM Users
                 WHERE Email = @Email";
 
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
             return await connection.QuerySingleOrDefaultAsync<User>(query, new { Email = email });
         }
 
@@ -32,7 +32,7 @@ namespace StudentRecordManager.Repositories
                 FROM Users
                 WHERE UserID = @UserID";
 
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
             return await connection.QuerySingleOrDefaultAsync<User>(query, new { UserID = userId });
         }
 
@@ -43,7 +43,7 @@ namespace StudentRecordManager.Repositories
                 VALUES (@Email, @PasswordHash, @IsAuthorised, @Role, @CreatedAt, @Department);
                 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
             return await connection.QuerySingleAsync<int>(query, user);
         }
 
@@ -54,7 +54,7 @@ namespace StudentRecordManager.Repositories
                 SET IsAuthorised = @IsAuthorised
                 WHERE UserID = @UserID";
 
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
             var rows = await connection.ExecuteAsync(query, new { UserID = userId, IsAuthorised = IsAuthorised });
             return rows > 0;
         }
@@ -67,7 +67,7 @@ namespace StudentRecordManager.Repositories
                 WHERE IsAuthorised = 0 AND Role != 'Admin'
                 ORDER BY CreatedAt DESC";
 
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
             return await connection.QueryAsync<User>(query);
         }
 
@@ -78,14 +78,14 @@ namespace StudentRecordManager.Repositories
                 FROM Users
                 ORDER BY CreatedAt DESC";
 
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
             return await connection.QueryAsync<User>(query);
         }
 
         public async Task<bool> DeleteUserAsync(int userId)
         {
             const string query = @"DELETE FROM Users WHERE UserID = @UserID";
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
             var rows = await connection.ExecuteAsync(query, new { UserID = userId });
             return rows > 0;
         }
@@ -98,7 +98,7 @@ namespace StudentRecordManager.Repositories
                 Department = @Department
                 WHERE UserID = @UserID";
 
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             var rows = await connection.ExecuteAsync(
                 query,

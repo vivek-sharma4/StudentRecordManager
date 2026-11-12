@@ -8,30 +8,30 @@ namespace StudentRecordManager.Repositories
 {
     public class StudentRepository : IStudentRepository
     {
-        private readonly IDbDataConnection _connectionFactory;
+        private readonly IDbDataConnection _connectionData;
 
-        public StudentRepository(IDbDataConnection connectionFactory)
+        public StudentRepository(IDbDataConnection connectionData)
         {
-            _connectionFactory = connectionFactory;
+            _connectionData = connectionData;
         }
 
         public async Task<IEnumerable<Student>> GetAllStudentsAsync()
         {
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             return await connection.QueryAsync<Student>("dbo.usp_Student_GetAll", commandType: CommandType.StoredProcedure);
         }
 
         public async Task<Student?> GetStudentByIdAsync(int studentId)
         {
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             return await connection.QuerySingleOrDefaultAsync<Student>("dbo.usp_Student_GetById", new { StudentID = studentId }, commandType: CommandType.StoredProcedure);
         }
 
         public async Task<int> CreateStudentAsync(Student student)
         {
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             return await connection.QuerySingleAsync<int>("dbo.usp_Student_Insert",
                 new
@@ -46,7 +46,7 @@ namespace StudentRecordManager.Repositories
 
         public async Task<bool> UpdateStudentAsync(Student student)
         {
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             var rowsAffected = await connection.QuerySingleAsync<int>("dbo.usp_Student_Update",
                 new
@@ -64,7 +64,7 @@ namespace StudentRecordManager.Repositories
 
         public async Task<bool> DeleteStudentAsync(int studentId)
         {
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             var rowsAffected = await connection.QuerySingleAsync<int>("dbo.usp_Student_Delete",
                 new
@@ -79,7 +79,7 @@ namespace StudentRecordManager.Repositories
         public async Task<IEnumerable<Student>> SearchByDepartmentAsync(
             string department)
         {
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             return await connection.QueryAsync<Student>(
                 "dbo.usp_Student_SearchByDepartment",
@@ -89,7 +89,7 @@ namespace StudentRecordManager.Repositories
 
         public async Task<bool> RollNoExistsAsync(string rollNo, int? excludeStudentId = null)
         {
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             var count = await connection.QuerySingleAsync<int>("dbo.usp_Student_RollNoExists",
                 new

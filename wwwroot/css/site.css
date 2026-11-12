@@ -15,6 +15,30 @@
     --radius: 12px;
 }
 
+.signup-login-form {
+    background: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+    color: #FFFFFF !important;
+}
+
+    .signup-login-form h3 {
+        color: #FFFFFF !important;
+    }
+
+    .signup-login-form p {
+        color: rgba(255, 255, 255, 0.75) !important;
+    }
+
+    /* Login and Registration navigation links */
+    .signup-login-form + .card-body a,
+    .card-body a.text-primary {
+        color: var(--brand-primary) !important;
+    }
+
+        .card-body a.text-primary:hover {
+            color: var(--brand-hover) !important;
+            text-decoration: underline !important;
+        }
 /* General page */
 body {
     background: var(--background) !important;
@@ -95,6 +119,7 @@ h1, h2, h3, h4, h5 {
 
     .btn:hover {
         transform: translateY(-1px);
+        background: var(--brand-primary) !important;
     }
 
 .btn-primary {

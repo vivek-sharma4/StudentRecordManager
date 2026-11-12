@@ -7,19 +7,14 @@
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-5">
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                <div class="card-header bg-gradient bg-primary text-white text-center py-4 border-0">
-                    <div class="mb-2">
-                        <span class="badge bg-white text-primary px-3 py-1 rounded-pill text-uppercase fw-semibold" style="letter-spacing: 0.5px; font-size: 0.75rem;">
-                            New User Registration
-                        </span>
-                    </div>
+                <div class="signup-login-form text-center py-4 border-0">
                     <h3 class="fw-bold mb-1">Student Record Manager</h3>
                     <p class="text-white-50 small mb-0">Create an account to request access to the student database</p>
                 </div>
 
                 <div class="card-body p-4 p-md-5">
                     <div class="alert alert-info py-2 px-3 small mb-4 rounded-3 border-0 bg-info-subtle text-info-emphasis">
-                        <strong>Approval Required:</strong> Newly registered accounts default to unauthorized (<code>IsAdmin = false</code>). An administrator must approve your account before you can access student records.
+                        <strong>Approval Required:</strong> Newly registered accounts default to unauthorized . An administrator must approve your account before you can access student records.
                     </div>
 
                     <form asp-controller="Account" asp-action="Register" method="post" id="registerForm">

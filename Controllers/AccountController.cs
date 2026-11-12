@@ -59,14 +59,14 @@ namespace StudentRecordManager.Controllers
                 {
                     _logger.LogWarning("Failed login attempt for unknown user {Email}", model.Email);
 
-                    ModelState.AddModelError(string.Empty, "Invalid email address or password.");
+                    ModelState.AddModelError(string.Empty, "Incorrect email address or password.");
                     return View(model);
                 }
 
                 var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
                 if (verificationResult == PasswordVerificationResult.Failed)
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid email address or password.");
+                    ModelState.AddModelError(string.Empty, "Incorrect email address or password.");
 
                     _logger.LogWarning("Failed login attempt for user {Email}", model.Email);
                     return View(model);

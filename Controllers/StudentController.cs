@@ -201,7 +201,12 @@ namespace StudentRecordManager.Controllers
             {
                 var userDepartment = User.FindFirst("Department")?.Value;
 
-                departments = departments.Where(d => d.DepartmentName.Equals(userDepartment, StringComparison.OrdinalIgnoreCase)).ToList();
+                departments = departments
+                    .Where(d => d.DepartmentName.Equals(
+                        userDepartment,
+                        StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                selectedDepartment = userDepartment;
             }
 
             ViewBag.Departments = departments;

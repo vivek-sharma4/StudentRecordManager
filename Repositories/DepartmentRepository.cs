@@ -9,31 +9,30 @@ namespace StudentRecordManager.Repositories
 {
     public class DepartmentRepository : IDepartmentRepository
     {
-        private readonly IDbDataConnection _connectionFactory;
+        private readonly IDbDataConnection _connectionData;
 
-        public DepartmentRepository(IDbDataConnection connectionFactory)
+        public DepartmentRepository(IDbDataConnection connectionData)
         {
-            _connectionFactory = connectionFactory;
+            _connectionData = connectionData;
         }
 
-        public async Task<IEnumerable<Department>>
-            GetAllActiveDepartmentsAsync()
+        public async Task<IEnumerable<Department>>GetAllActiveDepartmentsAsync()
         {
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             return await connection.QueryAsync<Department>("dbo.usp_Department_GetAll", commandType: CommandType.StoredProcedure);
         }
 
         public async Task<Department?> GetDepartmentByIdAsync(int departmentId)
         {
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             return await connection.QuerySingleOrDefaultAsync<Department>("dbo.usp_Department_GetById", new { DepartmentID = departmentId }, commandType: CommandType.StoredProcedure);
         }
 
         public async Task<int> CreateDepartmentAsync(string departmentName)
         {
-            await using var connection = _connectionFactory.CreateConnection();
+            await using var connection = _connectionData.CreateConnection();
 
             return await connection.QuerySingleAsync<int>("dbo.usp_Department_Insert", new { DepartmentName = departmentName }, commandType: CommandType.StoredProcedure);
         }
