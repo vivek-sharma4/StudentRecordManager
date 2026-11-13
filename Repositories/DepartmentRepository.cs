@@ -1,5 +1,4 @@
 ﻿
-using System.Data;
 using Dapper;
 using StudentRecordManager.Data;
 using StudentRecordManager.Models;
@@ -16,25 +15,46 @@ namespace StudentRecordManager.Repositories
             _connectionData = connectionData;
         }
 
-        public async Task<IEnumerable<Department>>GetAllActiveDepartmentsAsync()
+        public async Task<IEnumerable<Department>> GetAllActiveDepartmentsAsync()
         {
+            const string query = @"
+                SELECT DepartmentID, DepartmentName, IsActive, CreatedAt
+                FROM dbo.Departments
+                WHERE IsActive = 1
+                ORDER BY DepartmentName";
+
             await using var connection = _connectionData.CreateConnection();
 
-            return await connection.QueryAsync<Department>("dbo.usp_Department_GetAll", commandType: CommandType.StoredProcedure);
+            return await connection.QueryAsync<Department>(query);
         }
 
         public async Task<Department?> GetDepartmentByIdAsync(int departmentId)
         {
+            const string query = @"
+                SELECT DepartmentID, DepartmentName, IsActive, CreatedAt
+                FROM dbo.Departments
+                WHERE DepartmentID = @DepartmentID";
+
             await using var connection = _connectionData.CreateConnection();
 
-            return await connection.QuerySingleOrDefaultAsync<Department>("dbo.usp_Department_GetById", new { DepartmentID = departmentId }, commandType: CommandType.StoredProcedure);
+            return await connection.QuerySingleOrDefaultAsync<Department>(
+                query,
+                new { DepartmentID = departmentId });
         }
 
         public async Task<int> CreateDepartmentAsync(string departmentName)
         {
+            const string query = @"
+                INSERT INTO dbo.Departments (DepartmentName, IsActive, CreatedAt)
+                VALUES (@DepartmentName, 1, GETUTCDATE());
+
+                SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
             await using var connection = _connectionData.CreateConnection();
 
-            return await connection.QuerySingleAsync<int>("dbo.usp_Department_Insert", new { DepartmentName = departmentName }, commandType: CommandType.StoredProcedure);
+            return await connection.QuerySingleAsync<int>(
+                query,
+                new { DepartmentName = departmentName });
         }
     }
 }

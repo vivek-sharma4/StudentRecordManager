@@ -17,14 +17,12 @@ namespace StudentRecordManager.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<Department>>
-            GetAllActiveDepartmentsAsync()
+        public async Task<IEnumerable<Department>>GetAllActiveDepartmentsAsync()
         {
             return await _departmentRepository.GetAllActiveDepartmentsAsync();
         }
 
-        public async Task<Department?> GetDepartmentByIdAsync(
-            int departmentId)
+        public async Task<Department?> GetDepartmentByIdAsync(int departmentId)
         {
             if (departmentId <= 0)
                 throw new ArgumentException("Invalid department ID.");
@@ -32,8 +30,7 @@ namespace StudentRecordManager.Services
             return await _departmentRepository.GetDepartmentByIdAsync(departmentId);
         }
 
-        public async Task<int> CreateDepartmentAsync(
-            string departmentName)
+        public async Task<int> CreateDepartmentAsync(string departmentName)
         {
             if (string.IsNullOrWhiteSpace(departmentName))
             {
